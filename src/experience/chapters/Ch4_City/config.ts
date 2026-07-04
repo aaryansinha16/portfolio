@@ -1,0 +1,42 @@
+import type { ChapterConfig } from '../types'
+
+/** Dusk. Indigo towers, plum shadow, window-glow orange; sun dying between blocks. */
+export const cityConfig: ChapterConfig = {
+  name: 'City Dusk',
+  seed: 104,
+  env: {
+    fogColor: '#55415f',
+    fogDensity: 0.0095,
+    skyColor: '#8a5560',
+    sunColor: '#ff8c42',
+    sunIntensity: 1.0,
+    sunAzimuth: -85,
+    sunElevation: 8,
+    hemiSky: '#6b4e71',
+    hemiGround: '#2e2a3c',
+    hemiIntensity: 0.4,
+    toneExposure: 1.0,
+    groundColor: '#2c2f42',
+    roadTint: '#33344a',
+  },
+  greybox: {
+    spacing: 13,
+    offsetMin: 10,
+    offsetMax: 38,
+    sizeMin: [8, 16, 8],
+    sizeMax: [14, 48, 14],
+    colors: ['#3a3f5c', '#464b6b', '#6b4e71'],
+    density: 0.85,
+    emissiveShare: 0.12,
+    emissiveColors: ['#ff8c42'],
+  },
+  far: {
+    kind: 'towers',
+    color: '#262a44',
+    distMin: 70,
+    distMax: 160,
+    spacing: 26,
+    heightMin: 40,
+    heightMax: 90,
+  },
+}
