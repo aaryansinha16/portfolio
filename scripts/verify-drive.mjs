@@ -18,7 +18,10 @@ const TARGET = process.env.TARGET ?? 'http://localhost:4173/'
 
 const STOPS = [
   ['00-prologue', 0.0],
-  ['01-village', 0.1],
+  // three village stops = the Phase 2 poster test
+  ['01a-village-early', 0.07],
+  ['01b-village-mid', 0.115],
+  ['01c-village-late', 0.165],
   ['02-town', 0.26],
   ['03-highway', 0.42],
   ['04-city', 0.58],
