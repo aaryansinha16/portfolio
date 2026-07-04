@@ -56,6 +56,15 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (d)** — PHASE 5 COMPLETE. Detour system: scroll→spline plateau remap (ADR-15)
+  — store carries progress (scroll/UI) + splineProgress (world); world readers refactored.
+  Ch2 painted-board strip (freelance years) + Ch5 neon holo strip (4 flagships w/ live
+  GitHub stars, real links); in-world neon "◂ PROJECTS" signpost added at the Ch5 anchor.
+  Contact terminal at the board's end (email/github/linkedin/medium; résumé button
+  auto-appears when public/resume.pdf exists — owner: drop the file in). Verify stops are
+  now spline-space via window.__toScroll. Repo pushed to github (aaryansinha16/portfolio)
+  → Vercel auto-deploy. Flaky local preview-server restarts noted (kill+restart races);
+  re-run verify if goto times out.
 - **2026-07-05 (c)** — PHASE 4 COMPLETE. Resume became content source of truth: Parambhakti
   removed everywhere (owner request) — neon sign lineup is now AI-Trader/AIFlowo/MAESTRO/
   Devovia; real contact URLs (github/linkedin/medium/devovia.com); skill boards aligned to

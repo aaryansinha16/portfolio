@@ -16,6 +16,7 @@ const OUT = new URL('../shots/', import.meta.url).pathname
 mkdirSync(OUT, { recursive: true })
 const TARGET = process.env.TARGET ?? 'http://localhost:4173/'
 
+// SPLINE-space stops — converted to scroll at runtime via window.__toScroll
 const STOPS = [
   ['00-prologue', 0.0],
   // three village stops = the Phase 2 poster test
@@ -31,6 +32,7 @@ const STOPS = [
   ['04-city', 0.58],
   ['05-neon', 0.74],
   ['06-circuit', 0.93],
+  ['07-contact', 0.975],
 ]
 
 const browser = await chromium.launch({
@@ -56,7 +58,19 @@ const maxScroll = await page.evaluate(
   () => document.documentElement.scrollHeight - window.innerHeight,
 )
 
-for (const [name, frac] of STOPS) {
+// spline → scroll conversion + detour windows come from the app itself
+const toScroll = async (spline) => page.evaluate((p) => window.__toScroll(p), spline)
+const detours = await page.evaluate(() => window.__DETOURS)
+
+const allStops = []
+for (const [name, spline] of STOPS) allStops.push([name, await toScroll(spline)])
+detours.forEach((d, i) => {
+  allStops.push([`d${i + 1}-detour-early`, d.start + d.len * 0.3])
+  allStops.push([`d${i + 1}-detour-late`, d.start + d.len * 0.75])
+})
+allStops.sort((a, b) => a[1] - b[1])
+
+for (const [name, frac] of allStops) {
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * frac))
   await page.waitForTimeout(2200) // scrub 0.8s + lenis settle
   await page.screenshot({ path: `${OUT}${name}.png` })
@@ -80,11 +94,13 @@ await perfPage.waitForSelector('canvas', { timeout: 15000 })
 await perfPage.waitForTimeout(3000) // let the quality ratchet settle
 
 let minFps = Infinity
-for (const [name, frac] of [
+const perfToScroll = async (spline) => perfPage.evaluate((p) => window.__toScroll(p), spline)
+for (const [name, spline] of [
   ['village', 0.1],
   ['city', 0.58],
   ['neon', 0.74],
 ]) {
+  const frac = await perfToScroll(spline)
   await perfPage.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * frac))
   await perfPage.waitForTimeout(1500)
   const r = await perfPage.evaluate(

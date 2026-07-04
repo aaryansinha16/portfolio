@@ -104,3 +104,16 @@ flourish (Theatre.js authored camera on the master timeline), layered ON TOP of 
 Also: ONE shared headlight pool instead of per-vehicle point lights — 2–3 dynamic lights
 cost ~15fps at dpr 2 AND changing light counts at swap boundaries forced three.js to
 recompile every program.
+
+**ADR-15 · 2026-07-05 · Detours pause the world via a scroll→spline plateau remap**
+DESIGN says "the journey pauses and a horizontal strip takes over." Implemented as a
+piecewise-monotonic remap: scroll progress keeps advancing; SPLINE progress (the world's one
+coordinate) plateaus inside detour windows while the DOM strip translates horizontally as a
+function of the same scroll. The store now carries both (progress = scroll/UI, splineProgress
+= world); the master timeline's mapping is no longer identity but remains one pure reversible
+function — scrubbing back re-drives the strip and un-pauses in reverse. Vehicle velocity
+derives from spline deltas, so the rider genuinely stops at each detour (wheels, bob, dust
+all idle). Verify stops are spline-space, converted at runtime via window.__toScroll.
+*Rejected:* pinned ScrollTrigger sections (a second scroll consumer — violates prime
+directive #1), slow-rolling background under the strip (weaker beat, and the DESIGN brief
+explicitly says pause).

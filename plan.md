@@ -110,12 +110,15 @@ seamless.
 
 ## Phase 5 — Content & detours
 
-- [ ] `DetourManager`: horizontal scroll strips at Ch2 (freelance work), Ch5 (AI-Trader, AIFlowo,
-      Maestro, Devovia — each a neon hologram panel w/ live links + GitHub stats)
-- [ ] About/skills content woven into world objects (hoardings, signboards) + overlay copy
-- [ ] Contact section on the circuit board: terminal-styled form or direct links (email,
-      GitHub, LinkedIn), résumé download
-- [ ] Full copywriting pass per DESIGN.md voice rules
+- [x] `DetourManager`: the journey PAUSES via a scroll→spline plateau remap (ADR-15) while a
+      horizontal strip takes over — Ch2 painted-board panels (freelance years), Ch5 neon
+      hologram panels (AI-Trader, AIFlowo, Maestro, Devovia) w/ live links + GitHub star
+      counts; in-world signposts anchor both stops
+- [x] About/skills content woven into world objects (skill hoardings, shop signboards,
+      silkscreen nameplate) + chapter copy
+- [x] Contact section on the circuit board: terminal-styled direct links (email, GitHub,
+      LinkedIn, Medium); résumé button appears automatically once public/resume.pdf exists
+- [x] Copywriting pass per DESIGN.md voice rules — resume is the content source of truth
 
 **Accept:** a recruiter can extract role, stack, 4 flagship projects, and contact within the
 experience without friction — the experience never hides the information.
