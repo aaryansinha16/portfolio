@@ -4,22 +4,25 @@ import { EffectComposer, DepthOfField, Vignette, Noise } from '@react-three/post
 import type { DepthOfFieldEffect } from 'postprocessing'
 import { Vector3 } from 'three'
 import { pointAt } from './spline/roadPath'
-import { vehicleProgressAt } from './atmosphere/ColorScript'
+import { vehicleProgressAt, zoneFloat } from './atmosphere/ColorScript'
+import { HeatHazeEffect } from './effects/HeatHazeEffect'
 import { useJourney } from '../state/useJourney'
 
 /**
  * The post chain (DESIGN.md #6), all subtle, tiered by quality
  * (AdaptiveQuality drives the tier; CLAUDE.md: degrade post first):
- *   high   — 4x MSAA + DoF (half-res bokeh) + vignette + grain
- *   medium — 2x MSAA + vignette + grain
- *   low    — vignette + grain
- * Vignette + grain never drop — they are the film grade, and they're free.
- * Bloom joins in Phase 4 for the night chapters.
+ *   high   — 4x MSAA + DoF (half-res bokeh) + haze + vignette + grain
+ *   medium — 2x MSAA + haze + vignette + grain
+ *   low    — haze + vignette + grain
+ * Vignette + grain never drop — they are the film grade, and they're
+ * near-free (heat haze merges into the same pass; it fades in only around
+ * the highway chapter). Bloom joins with the night chapters' art pass.
  */
 export function PostFX() {
   const quality = useJourney((s) => s.quality)
   const dofRef = useRef<DepthOfFieldEffect>(null)
   const focus = useMemo(() => new Vector3(0, 1, -10), [])
+  const haze = useMemo(() => new HeatHazeEffect(), [])
 
   useEffect(() => {
     const dof = dofRef.current
@@ -31,13 +34,15 @@ export function PostFX() {
   }, [focus, quality])
 
   useFrame(() => {
-    if (!dofRef.current) return
     const { progress } = useJourney.getState()
+    // Heat shimmer peaks mid-highway (zone 3), gone by the neighbors.
+    haze.setIntensity(Math.max(0, 1 - Math.abs(zoneFloat(progress) - 3) * 1.4) * 0.9)
+    if (!dofRef.current) return
     pointAt(vehicleProgressAt(progress), focus)
     focus.y += 0.7
   })
 
-  const effects: ReactElement[] = []
+  const effects: ReactElement[] = [<primitive key="haze" object={haze} />]
   if (quality === 'high') {
     effects.push(<DepthOfField key="dof" ref={dofRef} worldFocusRange={30} bokehScale={2.2} />)
   }
