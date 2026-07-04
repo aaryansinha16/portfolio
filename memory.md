@@ -17,6 +17,10 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Open threads
 
+- Verification: `pnpm build && pnpm preview --port 4173 &` then `pnpm verify` — headless
+  system-Chrome drive, screenshots to `shots/`, fails on any console error / GL warning.
+  Review the screenshots against the DESIGN checklist, don't just trust exit 0.
+
 - Vehicle glTF sourcing: shortlist Quaternius (free, cohesive style), Sketchfab CC-BY low-poly
   R15-alike + Safari-alike. Decision by Phase 3; a stand-in box is fine until then.
 - Font licensing: Clash Display & Satoshi via Fontshare (free) — confirm webfont weights needed.
