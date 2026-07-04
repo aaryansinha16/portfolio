@@ -435,7 +435,8 @@ body {
   --accent: #00e5ff;
   background: linear-gradient(168deg, rgba(10, 14, 30, 0.82), rgba(7, 9, 20, 0.9));
   color: var(--ink);
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border: 1px solid rgba(0, 229, 255, 0.5); /* fallback if color-mix unsupported */
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   box-shadow:
     0 0 22px color-mix(in srgb, var(--accent) 22%, transparent),
     inset 0 0 32px rgba(0, 0, 0, 0.5);
@@ -562,4 +563,202 @@ body {
 .contact__links a:hover {
   border-bottom-color: #39ff88;
   text-shadow: 0 0 10px rgba(57, 255, 136, 0.5);
+}
+
+/* ---------- loader gauge ---------- */
+
+.loader__gauge {
+  width: 128px;
+  height: 74px;
+}
+
+.loader__gauge g {
+  transition: transform 0.5s cubic-bezier(0.3, 1.2, 0.4, 1);
+}
+
+.loader__gauge-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: rgba(201, 207, 221, 0.55);
+}
+
+/* ---------- HUD controls ---------- */
+
+.hud {
+  position: fixed;
+  left: clamp(16px, 2vw, 28px);
+  bottom: clamp(14px, 2.4vh, 24px);
+  z-index: 30;
+  display: flex;
+  gap: 10px;
+}
+
+.hud__btn {
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-dim);
+  background: rgba(10, 12, 24, 0.55);
+  border: 1px solid rgba(201, 207, 221, 0.22);
+  border-radius: 3px;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.hud__btn:hover {
+  color: var(--ink);
+  border-color: rgba(201, 207, 221, 0.5);
+}
+
+/* ---------- static journey (reduced-motion / no-WebGL) ---------- */
+
+.static-journey {
+  display: block;
+}
+
+.static-card {
+  min-height: 88vh;
+  display: flex;
+  align-items: center;
+  padding: 12vh clamp(24px, 8vw, 120px);
+}
+
+.static-card__inner {
+  max-width: 720px;
+}
+
+.static-card__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+
+.static-card__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(34px, 5.5vw, 64px);
+  line-height: 1;
+  text-transform: uppercase;
+  color: #f4f2ec;
+  margin-bottom: 14px;
+}
+
+.static-card__tagline {
+  font-size: clamp(15px, 1.3vw, 18px);
+  line-height: 1.55;
+  color: rgba(244, 242, 236, 0.88);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+.static-card__detour h3 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 18px;
+  margin: 26px 0 10px;
+  color: #f4f2ec;
+}
+
+.static-card__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(244, 242, 236, 0.82);
+}
+
+.static-card__list a {
+  color: var(--gold);
+}
+
+.static-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  margin: 18px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.static-card__links a {
+  color: #39ff88;
+}
+
+.static-card--contact {
+  background: linear-gradient(180deg, #010806, #04150d);
+}
+
+.static-card__note {
+  font-size: 13px;
+  color: var(--ink-dim);
+  max-width: 460px;
+}
+
+/* ---------- a11y / SEO ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 720px) {
+  .title-card {
+    bottom: clamp(64px, 12vh, 110px);
+    max-width: 86vw;
+  }
+
+  .rail {
+    right: 8px;
+    height: 38vh;
+  }
+
+  .rail__dot::after {
+    display: none;
+  }
+
+  .detour__track {
+    padding-left: 12vw;
+    padding-right: 60vw;
+  }
+
+  .detour-panel {
+    width: min(78vw, 320px);
+  }
+
+  .detour__header {
+    gap: 8px;
+  }
+
+  .detour__hint {
+    display: none;
+  }
+
+  .contact {
+    bottom: 70px;
+  }
+
+  .hud {
+    bottom: 12px;
+  }
+
+  .hud__btn {
+    padding: 6px 8px;
+  }
 }
