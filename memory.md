@@ -56,6 +56,14 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (c)** — PHASE 4 COMPLETE. Resume became content source of truth: Parambhakti
+  removed everywhere (owner request) — neon sign lineup is now AI-Trader/AIFlowo/MAESTRO/
+  Devovia; real contact URLs (github/linkedin/medium/devovia.com); skill boards aligned to
+  resume stack. Ch6 finale: feeder traces climb the ramp on the road deck → Manhattan board
+  traces light up ahead of the vehicle (merged geometry + pulse-front shader), components
+  rise as the front passes, gold pads/vias, blinking LEDs, silkscreen nameplate (contact
+  stage). Ch0: ignition beat (headlight off at rest, on with first scroll) + fireflies.
+  Tuning round: 5 wide feeders read as laser lanes → 3 thin ones. All verify green.
 - **2026-07-05 (b)** — Phase 4 part 2: City + Neon art passes. Shared tower/window-grid
   machinery (world/towers.ts). City: window-lit towers, sodium streetlights, blinking rooftop
   beacons, bats, and the TUNNEL that swallows the city→neon boundary (dive in at dusk, emerge
