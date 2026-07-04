@@ -86,9 +86,12 @@ on shots/01a–01c.png is the final sign-off
 
 Order: 3 Highway (simplest) → 2 Town → 4 City → 5 Neon → 6 Circuit → 0 Prologue polish.
 
-- [ ] Ch3 Highway: heat haze shader, hoardings (double as skill boards), distant hills, traffic
-      (instanced, simple lane logic)
-- [ ] Ch2 Town: denser props, market street, wires/poles, first "detour" signpost
+- [x] Ch3 Highway: heat haze shader (zone-driven UV wobble in the merged post pass), skill
+      hoardings (sun-bleached canvas-text boards — the stack as roadside ads), scrub plains,
+      milestone stones, oncoming traffic (instanced, opposite lane), soaring kites
+- [x] Ch2 Town: dense shop street (plaster facades, awnings, painted signboards incl. the
+      cyber café), power poles + sagging wires, market clutter, laundry-line sway, pigeons,
+      chai smoke, first "detour" signpost (Phase 5 strip lands there)
 - [ ] Ch4 City: tower silhouettes with emissive window grids (instanced planes), dusk gradient,
       tunnel dive set-piece into Ch5
 - [ ] Ch5 Neon: wet-road reflection (planar or SSR-cheap trick), neon signage for AI projects,

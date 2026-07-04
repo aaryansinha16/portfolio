@@ -56,6 +56,13 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05** — Phase 4 part 1: Highway + Town art passes. Shared biome kit extracted
+  (textPanel canvas signage, BirdFlock, PuffColumn, roadSamples); village movers migrated to
+  it. Highway: skill hoardings (readable while driving!), heat-haze post effect (zone-driven),
+  scrub, milestones, oncoming traffic, kites. Town: shop street w/ signboards + awnings,
+  poles + sagging wires, clutter, laundry sway, pigeons, chai smoke, detour signpost.
+  All cached-primitive pattern; verify green (60fps gate, 0 errors). Remaining Phase 4:
+  City → Neon → Circuit → Prologue polish.
 - **2026-07-04 (e)** — Phase 3 built: shared vehicle parts kit (wheels/tubes/wedge/cached
   materials), commuter motorcycle + R15 + Safari modeled procedurally, swap choreography as
   pure functions of progress (decel→shoulder-park w/ side-stand lean + nose-out; hermite
