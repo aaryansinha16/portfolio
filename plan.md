@@ -11,29 +11,33 @@ Statuses: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 0 — Scaffold & quality gates
 
-- [ ] Vite + React + TS scaffold, pnpm, eslint/prettier, strict tsconfig
-- [ ] Deps: three, @react-three/fiber, @react-three/drei, @react-three/postprocessing, gsap,
+- [x] Vite + React + TS scaffold, pnpm, eslint/prettier, strict tsconfig
+- [x] Deps: three, @react-three/fiber, @react-three/drei, @react-three/postprocessing, gsap,
       lenis, zustand, @theatre/core + @theatre/studio (dev only), r3f-perf (dev only)
-- [ ] `Experience.tsx`: Canvas with ACESFilmicToneMapping, SRGBColorSpace, shadows, dpr [1, 2]
-- [ ] Post chain mounted (SMAA + Vignette to start)
-- [ ] `?debug` flag: r3f-perf, axes/grid helpers, free-fly camera toggle
-- [ ] Vercel project connected, deploys on push to main
+- [x] `Experience.tsx`: Canvas with ACESFilmicToneMapping, SRGBColorSpace, shadows, dpr [1, 2]
+- [x] Post chain mounted (4x MSAA + Vignette + grain — SMAA rejected, see ADR-9)
+- [x] `?debug` flag: r3f-perf, spline visualizer, boundary markers, free-fly camera (F)
+- [ ] Vercel project connected, deploys on push to main ← needs owner's Vercel account
 
 **Accept:** empty graded scene deploys to a URL, 60fps, debug tooling works.
 
 ## Phase 1 — The Spine (scroll → spline → camera) ← highest risk, do carefully
 
-- [ ] `roadPath.ts`: CatmullRomCurve3 for the FULL journey (~2,500–3,500 units), with named
-      progress marks per chapter boundary and set-piece
-- [ ] Procedural road ribbon extruded along the spline (custom geometry, UVs for dashes)
-- [ ] Greybox world: untextured terrain blocks + box "buildings" per chapter zone, fog on
-- [ ] `ScrollSpine.ts`: Lenis + one ScrollTrigger, page height ≈ 700vh, normalized progress in
-      Zustand, master GSAP timeline scrubbed ~0.8
-- [ ] `CameraRig`: position = curve.getPointAt(p) + offset; look-at leads by ~6 units; banking
-      on curves; FOV kick with scroll velocity
-- [ ] Placeholder vehicle (box) driving the spline
-- [ ] `ChapterManager`: mount active ±1 chapters, dispose on unmount; `?chapter=N` jump
-- [ ] Progress rail UI (right edge) with clickable chapter dots
+- [x] `roadPath.ts`: CatmullRomCurve3 for the FULL journey (~3,400 units), with computed
+      progress marks per chapter boundary (`CHAPTER_MARKS`)
+- [x] Procedural road ribbon extruded along the spline (vertex-tinted per chapter, instanced
+      centerline dashes)
+- [x] Greybox world: vertex-colored ground + instanced box props + far silhouettes per zone,
+      fog + full color script lerping across all 7 zones (pulled forward from Phase 2)
+- [x] `ScrollSpine.ts`: Lenis + one ScrollTrigger, normalized progress in Zustand, master GSAP
+      timeline scrubbed 0.8 — page height 1800vh, not 700vh (700 made a chapter one wheel-flick;
+      tune via `SCROLL_PAGES`)
+- [x] `CameraRig`: position = curve.getPointAt(p) + offset; look-at leads vehicle by ~6 units;
+      banking on curves; FOV kick + speed shake from scroll velocity
+- [x] Placeholder vehicle (box) driving the spline 8.5m ahead of camera, headlamp + taillight
+      signature glow, suspension bob
+- [x] `ChapterManager`: mount active ±1 chapters, dispose on unmount; `?chapter=N` jump
+- [x] Progress rail UI (right edge) with clickable chapter dots + hover titles
 
 **Accept:** scrolling drives the greybox journey end-to-end with buttery momentum, zero jank at
 chapter boundaries, and it already *feels* like driving. Get Shreya to scroll it — if her

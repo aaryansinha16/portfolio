@@ -47,3 +47,17 @@ active ±1, disposes on unmount. Costs: boundary-lerp complexity, strict biome i
 **ADR-8 · 2026-07-04 · Content as typed TS config, no CMS**
 Portfolio content changes a few times a year; a CMS is overhead. `content.ts` with typed
 chapter/project/detour schemas keeps copy reviewable in PRs.
+
+**ADR-9 · 2026-07-04 · 4x MSAA (composer multisampling) instead of SMAA**
+SMAA from postprocessing spams `glBlitFramebuffer: Read and write depth stencil attachments
+cannot be the same image` every frame on Chrome's ANGLE-Metal backend (macOS) — a failing GL
+op in user-facing browsers, isolated empirically with the composer A/B'd pass by pass.
+`<EffectComposer multisampling={4}>` renders clean, has equal/better edge quality on this
+geometry, and cuts ~57KB gzip (SMAA lookup textures).
+*Rejected:* SMAA (the bug), FXAA (softer than MSAA for hard low-poly edges), canvas-level
+antialias (does nothing once the composer renders offscreen).
+
+**ADR-10 · 2026-07-04 · React 18 + R3F v8 line (fiber 8 / drei 9 / postprocessing 2)**
+README pins React 18; fiber 9/drei 10 require React 19 and would force the whole ecosystem
+forward mid-build for zero visual gain. Locked: three 0.169, fiber 8.17, drei 9.122,
+postprocessing 2.16, zustand 5, lenis 1.1, gsap 3.12. Revisit only as its own migration task.
