@@ -126,6 +126,44 @@ for (const [name, spline] of [
 }
 await perfPage.close()
 
+// ---- memory / leak probe: two full journey roundtrips, then compare
+// renderer-tracked resources against the settled baseline (?debug exposes gl)
+const memPage = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+await memPage.goto(`${TARGET}?debug`, { waitUntil: 'domcontentloaded' })
+await memPage.waitForSelector('canvas', { timeout: 15000 })
+await memPage.waitForTimeout(2500)
+const memScroll = await memPage.evaluate(
+  () => document.documentElement.scrollHeight - window.innerHeight,
+)
+const glInfo = () =>
+  memPage.evaluate(() => {
+    const gl = window.__GL
+    return {
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
+      programs: gl.info.programs.length,
+      heapMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : -1,
+    }
+  })
+const roundtrip = async () => {
+  for (const f of [0.25, 0.5, 0.75, 1, 0.75, 0.5, 0.25, 0]) {
+    await memPage.evaluate((y) => window.scrollTo(0, y), Math.round(memScroll * f))
+    await memPage.waitForTimeout(900)
+  }
+}
+await roundtrip()
+const memBefore = await glInfo()
+await roundtrip()
+await roundtrip()
+const memAfter = await glInfo()
+console.log(
+  `mem probe: geometries ${memBefore.geometries}→${memAfter.geometries}, textures ${memBefore.textures}→${memAfter.textures}, programs ${memBefore.programs}→${memAfter.programs}, heap ${memBefore.heapMB}→${memAfter.heapMB}MB`,
+)
+const leak =
+  memAfter.geometries > memBefore.geometries + 8 || memAfter.textures > memBefore.textures + 4
+if (leak) console.log('LEAK WARNING: renderer resources grew across roundtrips')
+await memPage.close()
+
 await page.evaluate(() => window.scrollTo(0, 0))
 await page.waitForTimeout(2000)
 await page.screenshot({ path: `${OUT}99-back-to-start.png` })

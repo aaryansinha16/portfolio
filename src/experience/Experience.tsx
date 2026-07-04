@@ -11,6 +11,7 @@ import { Road, Dashes } from './world/Road'
 import { VehicleManager } from './vehicles/VehicleManager'
 import { PostFX } from './PostFX'
 import { useJourney } from '../state/useJourney'
+import { DEBUG } from '../utils/query'
 
 const DebugTools = lazy(() => import('./debug/DebugTools'))
 
@@ -36,6 +37,7 @@ export function Experience() {
         onCreated={({ gl }) => {
           gl.toneMapping = ACESFilmicToneMapping
           gl.outputColorSpace = SRGBColorSpace
+          if (DEBUG) (window as unknown as { __GL: unknown }).__GL = gl
           useJourney.getState().setReady()
         }}
       >

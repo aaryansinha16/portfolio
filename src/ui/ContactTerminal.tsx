@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { CONTACT } from '../content'
 import { useJourney } from '../state/useJourney'
 import { clamp01, normRange, smoothstep } from '../utils/math'
@@ -10,15 +10,7 @@ import { clamp01, normRange, smoothstep } from '../utils/math'
  */
 export function ContactTerminal() {
   const rootRef = useRef<HTMLDivElement>(null)
-  const [hasResume, setHasResume] = useState(false)
-
-  useEffect(() => {
-    // show the résumé button only if the file actually exists — SPA
-    // fallbacks answer 200 with text/html, so check the content type too
-    fetch('/resume.pdf', { method: 'HEAD' })
-      .then((r) => setHasResume(r.ok && (r.headers.get('content-type') ?? '').includes('pdf')))
-      .catch(() => {})
-  }, [])
+  const hasResume = CONTACT.resumeUrl.length > 0
 
   useEffect(() => {
     const apply = (p: number) => {
@@ -67,7 +59,7 @@ export function ContactTerminal() {
             MEDIUM
           </a>
           {hasResume && (
-            <a href="/resume.pdf" download>
+            <a href={CONTACT.resumeUrl} download>
               RÉSUMÉ ↓
             </a>
           )}

@@ -55,6 +55,8 @@ export const CONTACT = {
   linkedin: 'https://www.linkedin.com/in/aaryansinha16',
   medium: 'https://medium.com/@aaryansinha16',
   site: 'https://devovia.com',
+  /** set to '/resume.pdf' after dropping the file into public/ */
+  resumeUrl: '',
 } as const
 
 /** Highway hoardings — skills as sun-bleached roadside ads (DESIGN: hoardings double as skill boards). */
