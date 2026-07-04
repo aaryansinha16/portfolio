@@ -4,10 +4,14 @@ import type { ChapterConfig } from '../types'
 export const villageConfig: ChapterConfig = {
   name: 'Village Dawn',
   seed: 101,
+  camera: { height: 1.72, right: 0.92, fov: 46, chase: 6 },
   env: {
     fogColor: '#e0b48c',
     fogDensity: 0.0085,
     skyColor: '#efc79e',
+    skyZenith: '#a9b4dd',
+    skyHorizon: '#f4c493',
+    sunGlow: 0.85,
     sunColor: '#ffc474',
     sunIntensity: 1.3,
     sunAzimuth: 95,
@@ -38,3 +42,40 @@ export const villageConfig: ChapterConfig = {
     heightMax: 40,
   },
 }
+
+/**
+ * Village-specific look values (terrain/props/movers). Only this biome reads
+ * these; shared systems keep using villageConfig.env above.
+ */
+export const villageArt = {
+  terrain: {
+    earth: '#7d6647',
+    sage: '#71835f',
+    shoulder: '#8a7a5c', // worn dust beside the asphalt
+    mustardField: '#b3973c',
+    mustardRow: '#8f7a2e',
+    greenField: '#6f8b4a',
+    greenRow: '#5a7440',
+  },
+  trees: {
+    trunk: '#6b4a33',
+    canopyA: '#7a8b6f', // sage
+    canopyB: '#4e6b4a', // deep leaf
+    canopyC: '#8a8b58', // warm olive
+  },
+  huts: {
+    wallA: '#a5825c',
+    wallB: '#b3906a',
+    wallC: '#8a6f4d',
+    roofTerracotta: '#8a4a32',
+    roofThatch: '#9a7a4a',
+    door: '#3a2c20',
+  },
+  crops: {
+    mustardBloom: '#d8b93e', // the marigold accent carries the chapter
+    mustardStem: '#a9973c',
+    green: '#7a9a50',
+  },
+  smoke: { color: '#c4b09a', opacity: 0.32 },
+  birds: { color: '#241f1a' },
+} as const

@@ -200,3 +200,12 @@ export function GreyboxBiome({ zone, config }: { zone: number; config: ChapterCo
     </group>
   )
 }
+
+/**
+ * Just the fog-faded horizon layer — real biomes keep their depth plane 3
+ * (DESIGN.md silhouette layers) while replacing the greybox props.
+ */
+export function FarSilhouettes({ zone, config }: { zone: number; config: ChapterConfig }) {
+  const data = useMemo(() => buildBiome(zone, config), [zone, config])
+  return <InstancedBlocks items={data.far} kind={config.far.kind === 'towers' ? 'box' : 'cone'} />
+}
