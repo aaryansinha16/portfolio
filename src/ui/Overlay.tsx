@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { CHAPTER_COPY } from '../content'
 import { useJourney } from '../state/useJourney'
 import { CHAPTER_MARKS } from '../experience/spline/roadPath'
+import { detourAt, scrollOf } from '../experience/detours/DetourManager'
 import { scrollToChapter } from '../experience/ScrollSpine'
 import { clamp01, normRange } from '../utils/math'
 
@@ -36,12 +37,17 @@ function TitleCard() {
       // the boundary, and every card bows out at ~2/3 of its chapter.
       const fadeIn = chapter === 0 ? 1 : normRange(zt, 0.03, 0.14)
       const fadeOut = 1 - normRange(zt, 0.6, 0.8)
-      const o = clamp01(Math.min(fadeIn, fadeOut))
+      // step aside while a detour strip has the stage
+      const detour = detourAt(useJourney.getState().progress)
+      const detourDim = detour ? normRange(Math.min(detour.t, 1 - detour.t), 0, 0.06) : 0
+      const o = clamp01(Math.min(fadeIn, fadeOut)) * (1 - detourDim)
       el.style.opacity = o.toFixed(3)
       el.style.transform = `translateY(${((1 - o) * 14).toFixed(2)}px)`
     }
-    apply(useJourney.getState().progress)
-    return useJourney.subscribe((s) => s.progress, apply)
+    // subscribe to SCROLL (it always advances); spline is read inside
+    const applyFromState = () => apply(useJourney.getState().splineProgress)
+    applyFromState()
+    return useJourney.subscribe((s) => s.progress, applyFromState)
   }, [chapter])
 
   return (
@@ -97,7 +103,7 @@ function ProgressRail() {
         <button
           key={c.eyebrow}
           className={`rail__dot${i === chapter ? ' is-active' : ''}`}
-          style={{ top: `${CHAPTER_MARKS[i] * 100}%` }}
+          style={{ top: `${scrollOf(CHAPTER_MARKS[i]) * 100}%` }}
           onClick={() => scrollToChapter(i)}
           aria-label={`Drive to ${c.title}`}
           data-title={c.title}

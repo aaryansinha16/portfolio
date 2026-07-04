@@ -213,6 +213,39 @@ export function getNeonStatics(): Group {
     }
   })
 
+  /* the detour signpost — a small cyan neon marker where the rider pulls
+     over for the AI-flagship strip (window anchors at 0.55 of the zone) */
+  {
+    const m = road.zoneMeters * 0.53
+    const sD = road.at(m)
+    road.place(m, 7.2, pos)
+    const yaw = Math.atan2(sD.tx, sD.tz) + Math.PI - 0.15
+    const sign = new Mesh(
+      new PlaneGeometry(3.4, 1.1),
+      new MeshStandardMaterial({
+        color: '#000000',
+        emissive: '#ffffff',
+        emissiveMap: makeTextPanel({
+          title: '◂ PROJECTS',
+          bg: '#070914',
+          fg: '#00e5ff',
+          glow: true,
+          w: 512,
+          h: 160,
+        }),
+        emissiveIntensity: 1.8,
+        roughness: 0.6,
+        toneMapped: false,
+      }),
+    )
+    sign.position.set(pos.x, pos.y + 2.6, pos.z)
+    sign.rotation.y = yaw
+    const post = new Mesh(BOX, new MeshStandardMaterial({ color: '#12162c', roughness: 0.8 }))
+    post.position.set(pos.x, pos.y + 1.0, pos.z)
+    post.scale.set(0.12, 2.0, 0.12)
+    group.add(post, sign)
+  }
+
   /* smaller streaks under a sampling of the strips nearest the road */
   const nearStrips = strips.filter((s) => s.y < 8).slice(0, 22)
   if (nearStrips.length > 0) {
