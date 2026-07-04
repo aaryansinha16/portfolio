@@ -19,6 +19,8 @@ export interface TextPanelSpec {
   border?: string
   /** 0..1 — fades the paint like years of sun (highway hoardings) */
   bleach?: number
+  /** neon mode: glowing tube text with a halo, for emissiveMap use */
+  glow?: boolean
 }
 
 export function makeTextPanel(spec: TextPanelSpec): CanvasTexture {
@@ -44,10 +46,23 @@ export function makeTextPanel(spec: TextPanelSpec): CanvasTexture {
   ctx.textBaseline = 'middle'
   const titleSize = spec.sub ? h * 0.3 : h * 0.36
   ctx.font = `900 ${titleSize}px 'Arial Narrow', 'Arial Black', sans-serif`
-  ctx.fillText(spec.title, w / 2, spec.sub ? h * 0.42 : h * 0.5, w * 0.86)
-  if (spec.sub) {
-    ctx.font = `700 ${h * 0.14}px 'Arial Narrow', Arial, sans-serif`
-    ctx.fillText(spec.sub, w / 2, h * 0.72, w * 0.8)
+  if (spec.glow) {
+    // neon: wide soft halo, then a tighter pass, then a near-white core
+    ctx.shadowColor = spec.fg
+    ctx.shadowBlur = h * 0.22
+    ctx.fillText(spec.title, w / 2, h * 0.5, w * 0.86)
+    ctx.shadowBlur = h * 0.1
+    ctx.fillText(spec.title, w / 2, h * 0.5, w * 0.86)
+    ctx.shadowBlur = 0
+    ctx.fillStyle = '#f4ffff'
+    ctx.font = `700 ${titleSize * 0.94}px 'Arial Narrow', 'Arial Black', sans-serif`
+    ctx.fillText(spec.title, w / 2, h * 0.5, w * 0.86)
+  } else {
+    ctx.fillText(spec.title, w / 2, spec.sub ? h * 0.42 : h * 0.5, w * 0.86)
+    if (spec.sub) {
+      ctx.font = `700 ${h * 0.14}px 'Arial Narrow', Arial, sans-serif`
+      ctx.fillText(spec.sub, w / 2, h * 0.72, w * 0.8)
+    }
   }
 
   // sun-bleach: wash the whole panel toward the sky
