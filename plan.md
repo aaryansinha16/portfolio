@@ -111,7 +111,7 @@ experience without friction — the experience never hides the information.
       chapters 2+ stream in behind the prologue
 - [ ] Audio (off by default, tasteful toggle): engine layer tied to scroll velocity, per-chapter
       ambience crossfades
-- [ ] Quality tiers: auto-detect (GPU/devicePixelRatio) + manual toggle; mobile gets reduced
+- [~] Quality tiers: auto tier ratchet shipped early (ADR-13); manual toggle + real device detect remain; mobile gets reduced
       post + density but the SAME journey
 - [ ] `prefers-reduced-motion` fallback: chapter-card mode
 - [ ] Fallback static page for WebGL-unavailable + SEO: meta/OG tags, prerendered content in

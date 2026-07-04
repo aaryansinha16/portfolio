@@ -233,11 +233,7 @@ export function getVillageLayout(): Layout {
     }
     if (best) {
       cached.smokeAnchors.push(
-        new Vector3(
-          best.x,
-          TERRAIN_BASE_Y + heightAtRaw(best.x, best.z) + best.wallH + best.roofH,
-          best.z,
-        ),
+        new Vector3(best.x, terrainHeightAt(best.x, best.z) + best.wallH + best.roofH, best.z),
       )
     }
   }
@@ -321,8 +317,21 @@ function buildTempSamples(): RoadSample[] {
   return tempSamples
 }
 
-/** Nearest road point: distance and meters-along-zone. */
-export function nearestRoad(x: number, z: number): { d: number; m: number } {
+export interface RoadFrame {
+  /** distance to the road centerline */
+  d: number
+  /** meters along the zone at the nearest sample */
+  m: number
+  /** signed lateral offset (+ = right of travel) */
+  lateral: number
+}
+
+/**
+ * Nearest road point with road-local coordinates. ONE scan serves height,
+ * shoulder tint and field lookup — this runs per terrain vertex, so it's
+ * the hot path of the (one-time) village build.
+ */
+export function nearestRoad(x: number, z: number): RoadFrame {
   const { samples } = getVillageLayout()
   let best = Infinity
   // coarse-to-fine: every 4th sample, then refine around the winner
@@ -346,15 +355,21 @@ export function nearestRoad(x: number, z: number): { d: number; m: number } {
       finalI = i
     }
   }
-  return { d: Math.sqrt(best), m: samples[finalI].meters }
+  const s = samples[finalI]
+  return {
+    d: Math.sqrt(best),
+    m: s.meters,
+    lateral: (x - s.x) * s.rx + (z - s.z) * s.rz,
+  }
 }
 
 export function roadDistanceAt(x: number, z: number): number {
   return nearestRoad(x, z).d
 }
 
-function heightAtRaw(x: number, z: number): number {
-  const { d, m } = nearestRoad(x, z)
+/** Height from an already-computed road frame (skips the sample scan). */
+export function heightFromFrame(frame: RoadFrame, x: number, z: number): number {
+  const { d, m } = frame
   const corridor = smoothstep(clamp01((d - 7) / 20)) // flat within 7m of center
   const rolling = (fbm(x * 0.022, z * 0.022, SEED, 3) - 0.38) * 5.0
   const swell = (fbm(x * 0.006, z * 0.006, SEED + 900, 2) - 0.4) * 7.0
@@ -368,36 +383,23 @@ function heightAtRaw(x: number, z: number): number {
 
 /** Terrain surface height (world y) at a village-rect point. */
 export function terrainHeightAt(x: number, z: number): number {
-  return TERRAIN_BASE_Y + heightAtRaw(x, z)
+  return TERRAIN_BASE_Y + heightFromFrame(nearestRoad(x, z), x, z)
+}
+
+/** Field lookup from an already-computed road frame. */
+export function fieldFromFrame(frame: RoadFrame): { field: FieldRect; off: number } | null {
+  const layout = getVillageLayout()
+  for (const f of layout.fields) {
+    if (frame.m < f.m0 || frame.m > f.m1) continue
+    const off = frame.lateral * f.side // positive if on the field's side
+    if (off >= f.off0 && off <= f.off1) return { field: f, off }
+  }
+  return null
 }
 
 /** Which field rect (if any) covers this point, plus its local offset in meters. */
 export function fieldAt(x: number, z: number): { field: FieldRect; off: number } | null {
-  const layout = getVillageLayout()
-  // find nearest sample (coarse) to get road-local coords
-  const { samples } = layout
-  let bestI = 0
-  let best = Infinity
-  for (let i = 0; i < samples.length; i += 2) {
-    const dx = samples[i].x - x
-    const dz = samples[i].z - z
-    const d = dx * dx + dz * dz
-    if (d < best) {
-      best = d
-      bestI = i
-    }
-  }
-  const s = samples[bestI]
-  const m = s.meters
-  const dx = x - s.x
-  const dz = z - s.z
-  const lateral = dx * s.rx + dz * s.rz // signed: + is right of travel
-  for (const f of layout.fields) {
-    if (m < f.m0 || m > f.m1) continue
-    const off = lateral * f.side // positive if on the field's side
-    if (off >= f.off0 && off <= f.off1) return { field: f, off }
-  }
-  return null
+  return fieldFromFrame(nearestRoad(x, z))
 }
 
 function nearHut(x: number, z: number, r: number): boolean {

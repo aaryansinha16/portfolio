@@ -1,5 +1,13 @@
-import { useLayoutEffect, useMemo, useRef } from 'react'
-import { Color, InstancedMesh, Object3D } from 'three'
+import { useMemo } from 'react'
+import {
+  BoxGeometry,
+  Color,
+  ConeGeometry,
+  Group,
+  InstancedMesh,
+  MeshStandardMaterial,
+  Object3D,
+} from 'three'
 import {
   CHAPTER_MARKS,
   metersToProgress,
@@ -17,6 +25,12 @@ import { BOARD_Y } from './Ch6_Circuit/config'
  * spine can be felt end-to-end. Placement is deterministic (seeded) and hugs
  * the spline. Real biomes replace these internals from Phase 2 on — the
  * mount/unmount contract with ChapterManager stays identical.
+ *
+ * Zone meshes are built ONCE and module-cached; mount/unmount only attaches/
+ * detaches them from the scene graph (dispose={null}). Rebuilding geometry,
+ * materials and shader programs at every chapter boundary was a measured
+ * frame hitch — these buffers are a few KB per zone, so keeping them resident
+ * is the right trade (ADR-7's memory concern is textures, not this).
  */
 
 interface Instance {
@@ -121,7 +135,7 @@ function buildBiome(zone: number, config: ChapterConfig): BiomeData {
         const r = f.kind === 'hills' ? h * rngRange(rng, 1.7, 2.6) : rngRange(rng, 9, 18)
         far.push({
           x: point.x + right.x * side * dist,
-          y: f.kind === 'hills' ? 0 : h / 2,
+          y: f.kind === 'hills' ? h / 2 : h / 2,
           z: point.z + right.z * side * dist,
           rotY: rngRange(rng, 0, Math.PI * 2),
           sx: r,
@@ -136,69 +150,81 @@ function buildBiome(zone: number, config: ChapterConfig): BiomeData {
   return { base, emissive, far }
 }
 
-const dummy = new Object3D()
+/* ---------- shared GPU resources (never disposed, compiled once) ---------- */
 
-interface InstancedBlocksProps {
-  items: Instance[]
-  kind: 'box' | 'cone'
-  /** Cone base sits at y (hills); boxes are centered already. */
-  emissiveColor?: string
-  castShadow?: boolean
+const BOX_GEO = new BoxGeometry(1, 1, 1)
+const CONE_GEO = new ConeGeometry(1, 1, 6)
+const BOX_MAT = new MeshStandardMaterial({ roughness: 0.92 })
+const CONE_MAT = new MeshStandardMaterial({ roughness: 0.92, flatShading: true })
+const emissiveMats = new Map<string, MeshStandardMaterial>()
+
+function emissiveMat(color: string): MeshStandardMaterial {
+  let mat = emissiveMats.get(color)
+  if (!mat) {
+    mat = new MeshStandardMaterial({
+      color,
+      emissive: color,
+      emissiveIntensity: 1.6,
+      roughness: 0.6,
+    })
+    emissiveMats.set(color, mat)
+  }
+  return mat
 }
 
-function InstancedBlocks({ items, kind, emissiveColor, castShadow = false }: InstancedBlocksProps) {
-  const ref = useRef<InstancedMesh>(null)
+const dummy = new Object3D()
 
-  useLayoutEffect(() => {
-    const mesh = ref.current
-    if (!mesh) return
-    items.forEach((it, i) => {
-      dummy.position.set(it.x, kind === 'cone' ? it.y + it.sy / 2 : it.y, it.z)
-      dummy.rotation.set(0, it.rotY, 0)
-      dummy.scale.set(it.sx, it.sy, it.sz)
-      dummy.updateMatrix()
-      mesh.setMatrixAt(i, dummy.matrix)
-      mesh.setColorAt(i, it.color)
-    })
-    mesh.instanceMatrix.needsUpdate = true
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
-    mesh.computeBoundingSphere()
-  }, [items, kind])
+function makeInstancedMesh(
+  items: Instance[],
+  kind: 'box' | 'cone',
+  material: MeshStandardMaterial,
+  castShadow: boolean,
+): InstancedMesh {
+  const mesh = new InstancedMesh(kind === 'box' ? BOX_GEO : CONE_GEO, material, items.length)
+  items.forEach((it, i) => {
+    dummy.position.set(it.x, it.y, it.z)
+    dummy.rotation.set(0, it.rotY, 0)
+    dummy.scale.set(it.sx, it.sy, it.sz)
+    dummy.updateMatrix()
+    mesh.setMatrixAt(i, dummy.matrix)
+    mesh.setColorAt(i, it.color)
+  })
+  mesh.instanceMatrix.needsUpdate = true
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+  mesh.castShadow = castShadow
+  mesh.receiveShadow = true
+  mesh.computeBoundingSphere()
+  return mesh
+}
 
-  if (items.length === 0) return null
-  return (
-    <instancedMesh
-      ref={ref}
-      args={[undefined, undefined, items.length]}
-      castShadow={castShadow}
-      receiveShadow
-    >
-      {kind === 'box' ? <boxGeometry args={[1, 1, 1]} /> : <coneGeometry args={[1, 1, 6]} />}
-      {emissiveColor ? (
-        <meshStandardMaterial
-          color={emissiveColor}
-          emissive={emissiveColor}
-          emissiveIntensity={1.6}
-          roughness={0.6}
-        />
-      ) : (
-        <meshStandardMaterial roughness={0.92} flatShading={kind === 'cone'} />
-      )}
-    </instancedMesh>
-  )
+/* ---------- zone groups, built once and cached ---------- */
+
+const zoneCache = new Map<string, Group>()
+
+function getZoneGroup(zone: number, config: ChapterConfig, farOnly: boolean): Group {
+  const key = `${zone}${farOnly ? '-far' : ''}`
+  const hit = zoneCache.get(key)
+  if (hit) return hit
+
+  const data = buildBiome(zone, config)
+  const group = new Group()
+  const farKind = config.far.kind === 'towers' ? 'box' : 'cone'
+  if (!farOnly) {
+    if (data.base.length > 0) group.add(makeInstancedMesh(data.base, 'box', BOX_MAT, true))
+    for (const [color, items] of data.emissive) {
+      group.add(makeInstancedMesh(items, 'box', emissiveMat(color), false))
+    }
+  }
+  if (data.far.length > 0) {
+    group.add(makeInstancedMesh(data.far, farKind, farKind === 'cone' ? CONE_MAT : BOX_MAT, false))
+  }
+  zoneCache.set(key, group)
+  return group
 }
 
 export function GreyboxBiome({ zone, config }: { zone: number; config: ChapterConfig }) {
-  const data = useMemo(() => buildBiome(zone, config), [zone, config])
-  return (
-    <group>
-      <InstancedBlocks items={data.base} kind="box" castShadow />
-      {[...data.emissive.entries()].map(([color, items]) => (
-        <InstancedBlocks key={color} items={items} kind="box" emissiveColor={color} />
-      ))}
-      <InstancedBlocks items={data.far} kind={config.far.kind === 'towers' ? 'box' : 'cone'} />
-    </group>
-  )
+  const group = useMemo(() => getZoneGroup(zone, config, false), [zone, config])
+  return <primitive object={group} dispose={null} />
 }
 
 /**
@@ -206,6 +232,6 @@ export function GreyboxBiome({ zone, config }: { zone: number; config: ChapterCo
  * (DESIGN.md silhouette layers) while replacing the greybox props.
  */
 export function FarSilhouettes({ zone, config }: { zone: number; config: ChapterConfig }) {
-  const data = useMemo(() => buildBiome(zone, config), [zone, config])
-  return <InstancedBlocks items={data.far} kind={config.far.kind === 'towers' ? 'box' : 'cone'} />
+  const group = useMemo(() => getZoneGroup(zone, config, true), [zone, config])
+  return <primitive object={group} dispose={null} />
 }

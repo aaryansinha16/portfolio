@@ -78,3 +78,16 @@ backend (macOS) whenever any effect consumes depth (DoF; SMAA's depth path too).
 the older attach-depth-texture-directly architecture: verified 0 GL warnings with
 4x MSAA + DepthOfField. Supersedes the "MSAA works around it" half of ADR-9 (SMAA→MSAA choice
 stands on quality/size regardless). Unpin when postprocessing fixes the Metal blit upstream.
+
+**ADR-13 · 2026-07-04 · One-way adaptive quality ratchet (no promotion)**
+Real-device testing (Retina dpr 2) showed ~35fps sustained + a 146ms chapter-mount hitch —
+the earlier headless verification ran at dpr 1 and hid it. Fixes: (a) quality tiers driven by
+drei PerformanceMonitor stepping DOWN only — dpr 2→1.5→1.2, composer MSAA 4→2→0, DoF high-only;
+(b) DoF bokeh at half resolution; (c) chapter zone meshes module-cached and re-attached
+instead of rebuilt (remounts were re-uploading geometry and recompiling programs).
+Promotion is deliberately absent: vsync caps a comfortable medium at 60fps, which is
+indistinguishable from a struggling 60, so inclining flip-flops the composer (each rebuild
+≈ one 100ms+ frame). Result: 60fps flat at dpr 2 even with 2x CPU throttle. Verification now
+measures at deviceScaleFactor 2. Manual quality toggle + real device detection stay Phase 6.
+*Rejected:* incline/decline with fallback (measured flip-flop rebuild spikes), static
+medium-start (punishes strong machines' first impression for nothing).

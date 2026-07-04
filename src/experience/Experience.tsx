@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ACESFilmicToneMapping, SRGBColorSpace } from 'three'
+import { AdaptiveQuality } from './AdaptiveQuality'
 import { Atmosphere } from './atmosphere/Atmosphere'
 import { Sky } from './atmosphere/Sky'
 import { CameraRig } from './CameraRig'
@@ -38,6 +39,7 @@ export function Experience() {
           useJourney.getState().setReady()
         }}
       >
+        <AdaptiveQuality />
         <Atmosphere />
         <Sky />
         <Ground />

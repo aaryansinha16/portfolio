@@ -20,8 +20,10 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 ## Open threads
 
 - Verification: `pnpm build && pnpm preview --port 4173 &` then `pnpm verify` — headless
-  system-Chrome drive, screenshots to `shots/`, fails on any console error / GL warning.
-  Review the screenshots against the DESIGN checklist, don't just trust exit 0.
+  system-Chrome drive, screenshots to `shots/`, fails on console errors / GL warnings / min
+  fps < 50 measured at deviceScaleFactor 2 + 2x CPU throttle (dpr-1 probes once hid a real
+  35fps regression — never trust dpr-1 numbers). Review the screenshots against the DESIGN
+  checklist, don't just trust exit 0.
 
 - Vehicle glTF sourcing: shortlist Quaternius (free, cohesive style), Sketchfab CC-BY low-poly
   R15-alike + Safari-alike. Decision by Phase 3; a stand-in box is fine until then.
@@ -52,6 +54,12 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-04 (d)** — Perf regression fixed after owner felt frame drops (Retina dpr 2 was
+  the blind spot: probes ran dpr 1). Measured 31–38fps + 146ms mount hitch → now 60fps flat,
+  worst frame ≤25ms, at dpr 2 even with 2x CPU throttle. Fixes: one-way adaptive quality
+  ratchet (dpr/MSAA/DoF tiers, ADR-13), half-res DoF bokeh, module-cached chapter meshes
+  (remounts = attach only). verify now gates on min fps at dpr 2. Owner should re-test feel;
+  note CLAUDE.md rule — judge perf in `pnpm preview`, not dev.
 - **2026-07-04 (c)** — Phase 2 vertical slice built: gradient sky dome (per-chapter
   zenith/horizon/sun-glow, tone-mapped shader), per-chapter camera framing incl. chase
   distance (bicycle 6m vs car 8.5m), procedural bicycle (spin, lean-into-curves, lamp),
