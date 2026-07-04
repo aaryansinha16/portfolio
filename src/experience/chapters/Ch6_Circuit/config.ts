@@ -4,6 +4,7 @@ import type { ChapterConfig } from '../types'
 export const circuitConfig: ChapterConfig = {
   name: 'The Circuit Board',
   seed: 106,
+  camera: { height: 2.3, right: 1.2, chase: 9.5 },
   env: {
     fogColor: '#05170f',
     fogDensity: 0.011,

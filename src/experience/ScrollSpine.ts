@@ -3,7 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { useJourney } from '../state/useJourney'
 import { CHAPTER_MARKS, chapterAtProgress } from './spline/roadPath'
-import { PREFERS_REDUCED_MOTION, START_CHAPTER } from '../utils/query'
+import { DEBUG, PREFERS_REDUCED_MOTION, START_CHAPTER } from '../utils/query'
 
 /**
  * THE scroll spine (prime directive #1). Lenis provides momentum, one
@@ -41,6 +41,11 @@ export function scrollToProgress(p: number, immediate = false): void {
 
 export function initScrollSpine(): () => void {
   gsap.registerPlugin(ScrollTrigger)
+
+  // ?debug: expose boundary marks for tuning scripts (verify stops etc.)
+  if (DEBUG) {
+    ;(window as unknown as { __MARKS: readonly number[] }).__MARKS = CHAPTER_MARKS
+  }
 
   lenis = new Lenis({
     duration: 1.15,

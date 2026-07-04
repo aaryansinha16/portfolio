@@ -4,6 +4,7 @@ import type { ChapterConfig } from '../types'
 export const cityConfig: ChapterConfig = {
   name: 'City Dusk',
   seed: 104,
+  camera: { height: 2.25, right: 1.25, chase: 9.2 },
   env: {
     fogColor: '#55415f',
     fogDensity: 0.0095,

@@ -4,6 +4,7 @@ import type { ChapterConfig } from '../types'
 export const neonConfig: ChapterConfig = {
   name: 'Neon Night',
   seed: 105,
+  camera: { height: 2.25, right: 1.25, chase: 9.2 },
   env: {
     // Fog sits a step lighter than the towers so silhouettes separate.
     fogColor: '#141931',

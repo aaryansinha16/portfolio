@@ -33,7 +33,9 @@ export function AdaptiveQuality() {
     <PerformanceMonitor
       ms={280}
       iterations={6}
-      bounds={() => [47, 240]}
+      // Decline while sustained fps < 52: a tier that can only hold ~50
+      // should yield to the next one's locked 60 — smoothness beats effects.
+      bounds={() => [52, 240]}
       onDecline={() => tierIndex.current > 0 && apply(tierIndex.current - 1)}
     />
   )

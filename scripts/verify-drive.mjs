@@ -22,8 +22,12 @@ const STOPS = [
   ['01a-village-early', 0.07],
   ['01b-village-mid', 0.115],
   ['01c-village-late', 0.165],
+  // swap set-pieces sit just before each boundary (marks: .1995/.3605/.5133)
+  ['s1-swap-motorcycle', 0.1924],
   ['02-town', 0.26],
+  ['s2-swap-r15', 0.3534],
   ['03-highway', 0.42],
+  ['s3-swap-safari', 0.5062],
   ['04-city', 0.58],
   ['05-neon', 0.74],
   ['06-circuit', 0.93],
