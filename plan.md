@@ -92,10 +92,11 @@ Order: 3 Highway (simplest) → 2 Town → 4 City → 5 Neon → 6 Circuit → 0
 - [x] Ch2 Town: dense shop street (plaster facades, awnings, painted signboards incl. the
       cyber café), power poles + sagging wires, market clutter, laundry-line sway, pigeons,
       chai smoke, first "detour" signpost (Phase 5 strip lands there)
-- [ ] Ch4 City: tower silhouettes with emissive window grids (instanced planes), dusk gradient,
-      tunnel dive set-piece into Ch5
-- [ ] Ch5 Neon: wet-road reflection (planar or SSR-cheap trick), neon signage for AI projects,
-      rain streaks optional
+- [x] Ch4 City: window-lit towers (shared window-grid machinery), sodium streetlights,
+      blinking rooftop beacons, bats — and the tunnel that swallows the boundary into night
+- [x] Ch5 Neon: wet-road streak trick (additive gradient smears under lights), AI-project
+      signs in glowing tube text, flickering strips, steam, sky drones; Bloom joins the post
+      chain (zone-driven intensity, update skipped while idle so day chapters pay nothing)
 - [ ] Ch6 Circuit: road ramps onto giant PCB; traces animate with scroll (shader on merged
       trace geometry); components rise from the board; ends at contact section
 - [ ] Ch0 Prologue: title card, engine-start interaction ("press to start" → ignition sound +

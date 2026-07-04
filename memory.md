@@ -56,6 +56,15 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (b)** — Phase 4 part 2: City + Neon art passes. Shared tower/window-grid
+  machinery (world/towers.ts). City: window-lit towers, sodium streetlights, blinking rooftop
+  beacons, bats, and the TUNNEL that swallows the city→neon boundary (dive in at dusk, emerge
+  at night). Neon: AI-project signs in glowing tube text (canvas shadowBlur), neon strips w/
+  two flicker materials, wet-road additive streaks, steam, sky drones. Bloom added with
+  zone-driven intensity + update-skip while idle (bloom's mip chain at intensity 0 cost the
+  DAY chapters ~9fps — patched bloom.update to no-op when idle). Bug caught by probe shots:
+  left-side neon signs faced away (single-sided planes need the π flip both sides).
+  Remaining Phase 4: Circuit finale + Prologue polish.
 - **2026-07-05** — Phase 4 part 1: Highway + Town art passes. Shared biome kit extracted
   (textPanel canvas signage, BirdFlock, PuffColumn, roadSamples); village movers migrated to
   it. Highway: skill hoardings (readable while driving!), heat-haze post effect (zone-driven),
