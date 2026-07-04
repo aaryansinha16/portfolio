@@ -88,3 +88,132 @@ export const AI_PROJECTS: readonly { name: string; color: string }[] = [
   { name: 'MAESTRO', color: '#b98aff' },
   { name: 'DEVOVIA', color: '#39ff88' },
 ]
+
+/* ---------------- detours (horizontal strips) ---------------- */
+
+export interface DetourPanel {
+  kind: 'intro' | 'card'
+  title: string
+  body: string
+  /** short mono footer lines (stack, stats) */
+  meta?: string[]
+  link?: { label: string; href: string }
+  /** github repo (owner fixed) for the live star count */
+  repo?: string
+  /** accent (neon holo panels) */
+  color?: string
+}
+
+export interface DetourDef {
+  id: string
+  eyebrow: string
+  title: string
+  style: 'board' | 'holo'
+  /** which chapter zone the stop belongs to */
+  zone: number
+  /** where along the zone the rider pulls over (0..1 of the zone) */
+  anchorT: number
+  /** how much scroll the pause consumes (fraction of total scroll) */
+  scrollLen: number
+  panels: DetourPanel[]
+}
+
+export const DETOURS: readonly DetourDef[] = [
+  {
+    id: 'freelance',
+    eyebrow: 'DETOUR — THE FREELANCE YEARS',
+    title: 'Twelve-plus apps before the job title',
+    style: 'board',
+    zone: 2,
+    anchorT: 0.62,
+    scrollLen: 0.062,
+    panels: [
+      {
+        kind: 'intro',
+        title: '2018–2023',
+        body: '12+ production web apps for international clients. Requirements to architecture to deployment to post-launch — owned end to end, alone.',
+      },
+      {
+        kind: 'card',
+        title: 'Real-time everything',
+        body: 'Live features with Socket.IO for client products — the obsession that later became Yjs CRDT collaborative editing in Devovia.',
+        meta: ['SOCKET.IO · WEBSOCKETS', 'later: YJS · TIPTAP · WEBRTC'],
+      },
+      {
+        kind: 'card',
+        title: 'Payments that clear',
+        body: 'Razorpay, Stripe and Mollie integrations across client builds — money flows people actually trusted.',
+        meta: ['RAZORPAY · STRIPE · MOLLIE'],
+      },
+      {
+        kind: 'card',
+        title: 'Storefronts & Shopify',
+        body: 'Shopify GraphQL APIs and long-lived client sites — krislineconsulting.com still maintained live.',
+        meta: ['SHOPIFY · GRAPHQL', 'KRISLINECONSULTING.COM'],
+      },
+      {
+        kind: 'card',
+        title: 'Then the job title',
+        body: "Masai School, then Brainerhub: 3+ concurrent client projects solo-owned, team-lead duties and a 'Rising Star' award in year one.",
+        meta: ['2023 → NH-48, NEXT CHAPTER'],
+      },
+    ],
+  },
+  {
+    id: 'ai-flagships',
+    eyebrow: 'DETOUR — THE AI FLAGSHIPS',
+    title: 'Shipping intelligence, not demos',
+    style: 'holo',
+    zone: 5,
+    anchorT: 0.55,
+    scrollLen: 0.075,
+    panels: [
+      {
+        kind: 'intro',
+        title: 'AI-native products',
+        body: 'Not CRUD with a chatbot bolted on. Agents that act, models that trade, orchestrators that ship code.',
+      },
+      {
+        kind: 'card',
+        title: 'AI-Trader',
+        color: '#00e5ff',
+        body: 'Dual-model ML for NSE F&O intraday options: macro regime detection + tick-level order flow. Walk-forward validated; risk caps enforced at the execution layer.',
+        meta: [
+          'PYTHON · XGBOOST · TIMESCALEDB · FASTAPI',
+          '1% MAX LOSS/TRADE · 5% DAILY CAP · ZERODHA KITE',
+        ],
+        link: { label: 'github/AI-trader', href: 'https://github.com/aaryansinha16/AI-trader' },
+        repo: 'AI-trader',
+      },
+      {
+        kind: 'card',
+        title: 'AIFlowo',
+        color: '#ff2e88',
+        body: 'An agent that does things: intent parser → task planner → tool selection → real browser execution with permission layers. Forms, job applications, flights, social.',
+        meta: ['NEXT.JS · NESTJS · PLAYWRIGHT · REDIS', 'OTP-AWARE FLOWS · CONTAINERISED WORKERS'],
+        link: { label: 'github/aiflowo', href: 'https://github.com/aaryansinha16/aiflowo' },
+        repo: 'aiflowo',
+      },
+      {
+        kind: 'card',
+        title: 'Maestro',
+        color: '#b98aff',
+        body: 'Turns Claude Code into an autonomous workforce: scheduled sessions across repos in parallel, PR-first, quality-gated — tests, lint and types before any PR opens.',
+        meta: [
+          'TYPESCRIPT · HONO · SQLITE · OCTOKIT',
+          '6 SKIP RULES · 5-STRIKE AUTO-PAUSE · COST BUDGETS',
+        ],
+        link: { label: 'github/Maestro', href: 'https://github.com/aaryansinha16/Maestro' },
+        repo: 'Maestro',
+      },
+      {
+        kind: 'card',
+        title: 'Devovia',
+        color: '#39ff88',
+        body: 'Developer command center: Yjs CRDT collaborative sessions, drag-drop runbooks with live logs, and a natural-language command interface. Phase 1 shipped solo in two weeks.',
+        meta: ['NEXT.JS 15 · NESTJS · YJS · TIPTAP', 'RAILWAY · VERCEL · GITHUB ACTIONS'],
+        link: { label: 'devovia.com', href: 'https://devovia.com' },
+      },
+    ],
+  },
+]

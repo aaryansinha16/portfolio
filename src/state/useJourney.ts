@@ -7,10 +7,16 @@ export type QualityTier = 'high' | 'medium' | 'low'
 interface JourneyState {
   /**
    * Normalized scroll progress 0→1, already scrub-smoothed by the master
-   * timeline. This is the single source of truth everything reads from.
+   * timeline. Drives UI (rail, hints) and the detour strips.
    */
   progress: number
-  /** d(progress)/dt in progress-units per second, smoothed. For FOV kicks/shake. */
+  /**
+   * Spline progress 0→1 — scroll remapped through the detour plateaus
+   * (DetourManager.splineOf). THE coordinate for everything in the world:
+   * camera, vehicles, env, chapter detection.
+   */
+  splineProgress: number
+  /** vehicle ground speed in m/s, smoothed. For FOV kicks/shake/wheels. */
   velocity: number
   /** Current chapter zone index 0..6, derived from progress. */
   chapter: number
@@ -21,7 +27,7 @@ interface JourneyState {
   reducedMotion: boolean
   /** WebGL context created — the loader fades out on this. */
   ready: boolean
-  setProgress: (p: number, velocity: number) => void
+  setProgress: (scroll: number, spline: number) => void
   setChapter: (c: number) => void
   setQuality: (q: QualityTier) => void
   toggleFreeFly: () => void
@@ -31,6 +37,7 @@ interface JourneyState {
 export const useJourney = create<JourneyState>()(
   subscribeWithSelector((set) => ({
     progress: 0,
+    splineProgress: 0,
     velocity: 0,
     chapter: 0,
     quality: 'high',
@@ -38,7 +45,7 @@ export const useJourney = create<JourneyState>()(
     freeFly: false,
     reducedMotion: PREFERS_REDUCED_MOTION,
     ready: false,
-    setProgress: (progress, velocity) => set({ progress, velocity }),
+    setProgress: (progress, splineProgress) => set({ progress, splineProgress }),
     setChapter: (chapter) => set({ chapter }),
     setQuality: (quality) => set({ quality }),
     toggleFreeFly: () => set((s) => ({ freeFly: !s.freeFly })),

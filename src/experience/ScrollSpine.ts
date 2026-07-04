@@ -3,7 +3,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { useJourney } from '../state/useJourney'
 import { CHAPTER_MARKS, chapterAtProgress } from './spline/roadPath'
-import { DEBUG, PREFERS_REDUCED_MOTION, START_CHAPTER } from '../utils/query'
+import { DETOUR_WINDOWS, scrollOf, splineOf } from './detours/DetourManager'
+import { PREFERS_REDUCED_MOTION, START_CHAPTER } from '../utils/query'
 
 /**
  * THE scroll spine (prime directive #1). Lenis provides momentum, one
@@ -27,7 +28,8 @@ export function getMasterTimeline(): gsap.core.Timeline | null {
 
 export function scrollToChapter(chapter: number, immediate = false): void {
   const mark = CHAPTER_MARKS[Math.max(0, Math.min(CHAPTER_MARKS.length - 2, chapter))]
-  scrollToProgress(chapter === 0 ? 0 : mark + 0.004, immediate)
+  // marks are spline-space; the scroll runway includes detour plateaus
+  scrollToProgress(chapter === 0 ? 0 : scrollOf(mark + 0.004), immediate)
 }
 
 export function scrollToProgress(p: number, immediate = false): void {
@@ -42,9 +44,17 @@ export function scrollToProgress(p: number, immediate = false): void {
 export function initScrollSpine(): () => void {
   gsap.registerPlugin(ScrollTrigger)
 
-  // ?debug: expose boundary marks for tuning scripts (verify stops etc.)
-  if (DEBUG) {
-    ;(window as unknown as { __MARKS: readonly number[] }).__MARKS = CHAPTER_MARKS
+  // Expose the journey mapping for tuning/verify scripts (inert data —
+  // the verify harness converts spline-space stops to scroll positions).
+  {
+    const w = window as unknown as {
+      __MARKS: readonly number[]
+      __toScroll: (spline: number) => number
+      __DETOURS: { start: number; len: number }[]
+    }
+    w.__MARKS = CHAPTER_MARKS
+    w.__toScroll = scrollOf
+    w.__DETOURS = DETOUR_WINDOWS.map((d) => ({ start: d.scrollStart, len: d.scrollLen }))
   }
 
   lenis = new Lenis({
@@ -73,8 +83,9 @@ export function initScrollSpine(): () => void {
     duration: 1,
     onUpdate: () => {
       const state = useJourney.getState()
-      state.setProgress(proxy.p, state.velocity)
-      const chapter = chapterAtProgress(proxy.p)
+      const spline = splineOf(proxy.p)
+      state.setProgress(proxy.p, spline)
+      const chapter = chapterAtProgress(spline)
       if (chapter !== state.chapter) state.setChapter(chapter)
     },
   })
