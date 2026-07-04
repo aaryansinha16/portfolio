@@ -3,6 +3,7 @@ import { subscribeWithSelector } from 'zustand/middleware'
 import { DEBUG, PREFERS_REDUCED_MOTION } from '../utils/query'
 
 export type QualityTier = 'high' | 'medium' | 'low'
+export type QualityMode = 'auto' | QualityTier
 
 interface JourneyState {
   /**
@@ -21,6 +22,8 @@ interface JourneyState {
   /** Current chapter zone index 0..6, derived from progress. */
   chapter: number
   quality: QualityTier
+  /** 'auto' = the ratchet drives; a tier = the owner pinned it (HUD toggle). */
+  qualityMode: QualityMode
   debug: boolean
   /** Dev free-fly camera (suspends the CameraRig). Toggled with F in ?debug. */
   freeFly: boolean
@@ -30,6 +33,7 @@ interface JourneyState {
   setProgress: (scroll: number, spline: number) => void
   setChapter: (c: number) => void
   setQuality: (q: QualityTier) => void
+  setQualityMode: (m: QualityMode) => void
   toggleFreeFly: () => void
   setReady: () => void
 }
@@ -41,6 +45,7 @@ export const useJourney = create<JourneyState>()(
     velocity: 0,
     chapter: 0,
     quality: 'high',
+    qualityMode: 'auto',
     debug: DEBUG,
     freeFly: false,
     reducedMotion: PREFERS_REDUCED_MOTION,
@@ -48,6 +53,7 @@ export const useJourney = create<JourneyState>()(
     setProgress: (progress, splineProgress) => set({ progress, splineProgress }),
     setChapter: (chapter) => set({ chapter }),
     setQuality: (quality) => set({ quality }),
+    setQualityMode: (qualityMode) => set({ qualityMode }),
     toggleFreeFly: () => set((s) => ({ freeFly: !s.freeFly })),
     setReady: () => set({ ready: true }),
   })),

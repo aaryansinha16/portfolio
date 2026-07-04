@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { PerformanceMonitor } from '@react-three/drei'
 import { useJourney, type QualityTier } from '../state/useJourney'
@@ -21,6 +21,7 @@ const DPR_CAP: Record<QualityTier, number> = { high: 2, medium: 1.5, low: 1.2 }
 export function AdaptiveQuality() {
   const setDpr = useThree((s) => s.setDpr)
   const tierIndex = useRef(2)
+  const qualityMode = useJourney((s) => s.qualityMode)
 
   const apply = (index: number) => {
     tierIndex.current = index
@@ -28,6 +29,17 @@ export function AdaptiveQuality() {
     useJourney.getState().setQuality(tier)
     setDpr(Math.min(window.devicePixelRatio || 1, DPR_CAP[tier]))
   }
+
+  // Owner pinned a tier via the HUD — apply it and park the ratchet.
+  useEffect(() => {
+    if (qualityMode !== 'auto') {
+      apply(TIERS.indexOf(qualityMode))
+    }
+    // returning to auto resumes ratcheting from the pinned tier
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qualityMode])
+
+  if (qualityMode !== 'auto') return null
 
   return (
     <PerformanceMonitor
