@@ -40,7 +40,7 @@ export const CHAPTER_COPY: readonly ChapterCopy[] = [
   {
     eyebrow: 'CHAPTER 05 — NEON NIGHT',
     title: 'The AI Era',
-    tagline: 'AI-Trader, AIFlowo, Parambhakti, Devovia — shipping intelligence, not demos.',
+    tagline: 'AI-Trader, AIFlowo, Maestro, Devovia — shipping intelligence, not demos.',
   },
   {
     eyebrow: 'CHAPTER 06 — THE CIRCUIT',
@@ -51,19 +51,20 @@ export const CHAPTER_COPY: readonly ChapterCopy[] = [
 
 export const CONTACT = {
   email: 'aaryansinha16@gmail.com',
-  // TODO(owner): fill real profile URLs before Phase 5 contact section ships.
-  github: '',
-  linkedin: '',
+  github: 'https://github.com/aaryansinha16',
+  linkedin: 'https://www.linkedin.com/in/aaryansinha16',
+  medium: 'https://medium.com/@aaryansinha16',
+  site: 'https://devovia.com',
 } as const
 
 /** Highway hoardings — skills as sun-bleached roadside ads (DESIGN: hoardings double as skill boards). */
 export const SKILL_BOARDS: readonly { title: string; sub: string }[] = [
-  { title: 'REACT · TYPESCRIPT', sub: 'ships production UI since the freelance years' },
-  { title: 'NODE · POSTGRES', sub: 'APIs that survive real traffic' },
+  { title: 'REACT · NEXT.JS · TS', sub: 'production UI since the freelance years' },
+  { title: 'NESTJS · NODE · POSTGRES', sub: 'APIs that survive real traffic' },
   { title: 'THREE.JS · WEBGL', sub: 'you are driving through one right now' },
-  { title: 'PYTHON · FASTAPI', sub: 'the AI era runs on it' },
+  { title: 'REAL-TIME · YJS · SOCKETS', sub: 'collaborative editing, live everything' },
   { title: '12+ PROJECTS SHIPPED', sub: 'before "developer" was a job title' },
-  { title: 'AWS · DOCKER · CI', sub: 'deploys on push, sleeps at night' },
+  { title: 'AWS · DOCKER · CI/CD', sub: 'deploys on push, sleeps at night' },
 ]
 
 /** Town shopfront signboards — the learning-years street. */
@@ -84,6 +85,6 @@ export const DETOUR_SIGN = { title: 'PROJECTS →', sub: '12+ builds, this way' 
 export const AI_PROJECTS: readonly { name: string; color: string }[] = [
   { name: 'AI-TRADER', color: '#00e5ff' },
   { name: 'AIFLOWO', color: '#ff2e88' },
-  { name: 'PARAMBHAKTI', color: '#b98aff' },
+  { name: 'MAESTRO', color: '#b98aff' },
   { name: 'DEVOVIA', color: '#39ff88' },
 ]

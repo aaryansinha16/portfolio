@@ -97,10 +97,13 @@ Order: 3 Highway (simplest) → 2 Town → 4 City → 5 Neon → 6 Circuit → 0
 - [x] Ch5 Neon: wet-road streak trick (additive gradient smears under lights), AI-project
       signs in glowing tube text, flickering strips, steam, sky drones; Bloom joins the post
       chain (zone-driven intensity, update skipped while idle so day chapters pay nothing)
-- [ ] Ch6 Circuit: road ramps onto giant PCB; traces animate with scroll (shader on merged
-      trace geometry); components rise from the board; ends at contact section
-- [ ] Ch0 Prologue: title card, engine-start interaction ("press to start" → ignition sound +
-      first scroll hint)
+- [x] Ch6 Circuit: feeder traces climb the ramp ON the road deck ("the road becomes the
+      board", literally), then Manhattan-routed board traces light up ahead of the vehicle
+      (merged geometry + pulse-front shader, scrub-reversible); components rise as the front
+      passes; gold pads/vias, blinking status LEDs, silkscreen nameplate = contact stage
+- [x] Ch0 Prologue: title card ✓; visual ignition beat (headlight pool off at rest, turns on
+      with the first scroll — pure progress function), fireflies over the pre-dawn grass;
+      ignition SOUND lands with Phase 6 audio
 
 **Accept:** full journey at quality bar; checklist passes per chapter; chapter-boundary lerps
 seamless.
@@ -108,7 +111,7 @@ seamless.
 ## Phase 5 — Content & detours
 
 - [ ] `DetourManager`: horizontal scroll strips at Ch2 (freelance work), Ch5 (AI-Trader, AIFlowo,
-      Parambhakti, Devovia — each a neon hologram panel w/ live links + GitHub stats)
+      Maestro, Devovia — each a neon hologram panel w/ live links + GitHub stats)
 - [ ] About/skills content woven into world objects (hoardings, signboards) + overlay copy
 - [ ] Contact section on the circuit board: terminal-styled form or direct links (email,
       GitHub, LinkedIn), résumé download

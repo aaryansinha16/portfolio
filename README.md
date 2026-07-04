@@ -58,5 +58,5 @@ Dev flags (querystring):
 2. **Town Morning** — learning to build, freelance years (12+ projects), first motorcycle
 3. **Highway Noon** — full-stack mastery, Brainerhub, the R15
 4. **City Dusk** — Eigenlytics × Luxia, engineering lead, the Safari
-5. **Neon Night** — AI engineering era; detours: AI-Trader, AIFlowo, Parambhakti, Devovia
+5. **Neon Night** — AI engineering era; detours: AI-Trader, AIFlowo, Maestro, Devovia
 6. **The Circuit Board** — road lifts onto a giant PCB, traces light up, contact section
