@@ -4,10 +4,14 @@ import type { ChapterConfig } from '../types'
 export const townConfig: ChapterConfig = {
   name: 'Town Morning',
   seed: 102,
+  camera: { height: 1.95, right: 1.05, chase: 7.5 },
   env: {
     fogColor: '#c3d5e2',
     fogDensity: 0.007,
     skyColor: '#bfdcef',
+    skyZenith: '#6fa8d8',
+    skyHorizon: '#d8e8f0',
+    sunGlow: 0.35,
     sunColor: '#fff2dc',
     sunIntensity: 1.35,
     sunAzimuth: 70,

@@ -4,10 +4,14 @@ import type { ChapterConfig } from '../types'
 export const prologueConfig: ChapterConfig = {
   name: 'Prologue',
   seed: 100,
+  camera: { height: 1.72, right: 0.92, fov: 46, chase: 6 },
   env: {
     fogColor: '#171b2c',
     fogDensity: 0.015,
     skyColor: '#10142a',
+    skyZenith: '#0a0d1f',
+    skyHorizon: '#313a66',
+    sunGlow: 0.5,
     sunColor: '#e8b04b',
     sunIntensity: 0.35,
     sunAzimuth: 100,

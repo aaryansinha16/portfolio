@@ -1,8 +1,8 @@
 import { useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Color, DirectionalLight, FogExp2, HemisphereLight, Object3D } from 'three'
-import { createEnv, sampleEnv } from './ColorScript'
-import { pointAt, vehicleProgressAt } from '../spline/roadPath'
+import { frameEnv, sampleEnv, vehicleProgressAt } from './ColorScript'
+import { pointAt } from '../spline/roadPath'
 import { useJourney } from '../../state/useJourney'
 import { createScratch } from '../../utils/scratch'
 
@@ -21,7 +21,9 @@ export function Atmosphere() {
   const sunRef = useRef<DirectionalLight>(null)
   const hemiRef = useRef<HemisphereLight>(null)
   const target = useMemo(() => new Object3D(), [])
-  const env = useMemo(() => createEnv(), [])
+  // Samples into the shared frameEnv — Sky and other lighting-aware systems
+  // read the same snapshot this frame (Atmosphere mounts first, samples first).
+  const env = frameEnv
   const fog = useMemo(() => new FogExp2(new Color('#171b2c'), 0.015), [])
 
   useFrame(() => {

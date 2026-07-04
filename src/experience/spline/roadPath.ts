@@ -134,16 +134,9 @@ export function metersToProgress(m: number): number {
   return m / totalLength
 }
 
-/**
- * Scroll progress p is the CAMERA's spline coordinate; the vehicle rides
- * ahead of it by the chase distance. Keeping them distinct means p=0 starts
- * with the camera behind the vehicle instead of inside it.
- */
-export const CHASE_METERS = 8.5
-
-export function vehicleProgressAt(p: number): number {
-  return p + CHASE_METERS / totalLength
-}
+// NOTE: scroll progress p is the CAMERA's spline coordinate; the vehicle
+// rides ahead by a per-chapter chase distance — see ColorScript's
+// vehicleProgressAt (lives there because chase is chapter config).
 
 const _clamped = (p: number) => (p < 0 ? 0 : p > 1 ? 1 : p)
 

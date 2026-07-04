@@ -1,14 +1,9 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { PerspectiveCamera } from 'three'
-import {
-  metersToProgress,
-  pointAt,
-  tangentAt,
-  totalLength,
-  vehicleProgressAt,
-} from './spline/roadPath'
+import { metersToProgress, pointAt, tangentAt, totalLength } from './spline/roadPath'
 import { useJourney } from '../state/useJourney'
+import { sampleCamera, vehicleProgressAt, type RuntimeCam } from './atmosphere/ColorScript'
 import { clamp, clamp01, damp } from '../utils/math'
 import { createScratch } from '../utils/scratch'
 
@@ -22,18 +17,18 @@ import { createScratch } from '../utils/scratch'
  * ahead (see roadPath.vehicleProgressAt).
  */
 
+// Height/right/fov live in per-chapter configs (sampleCamera lerps them);
+// these are the framing constants that never change per chapter.
 const CAM = {
-  height: 2.1, // above the road surface
-  right: 1.2, // lateral offset — DESIGN: slightly right of vehicle
   lookAheadMeters: 6, // look-at leads the VEHICLE by this much
   lookHeight: 1.1,
-  fovBase: 45,
   fovKickMax: 7,
   bankScale: 2.2,
   bankMax: 0.05, // radians
 }
 
 const scratch = createScratch()
+const camFrame: RuntimeCam = { height: 2.1, right: 1.2, fov: 45, chase: 8.5 }
 
 export function CameraRig() {
   const prevP = useRef(-1)
@@ -58,13 +53,14 @@ export function CameraRig() {
     if (Math.abs(speed - state.velocity) > 0.1) useJourney.setState({ velocity: speed })
 
     const { v1: camPos, v2: look, v3: right, v4: tangent, v5: tangentAhead } = scratch
+    sampleCamera(p, camFrame)
 
     // Position: on the spline at p, lifted and offset slightly right.
     pointAt(p, camPos)
     tangentAt(p, tangent)
     right.set(-tangent.z, 0, tangent.x).normalize()
-    camPos.y += CAM.height
-    camPos.addScaledVector(right, CAM.right)
+    camPos.y += camFrame.height
+    camPos.addScaledVector(right, camFrame.right)
 
     // Subtle speed shake (never at rest, never in reduced motion).
     if (!state.reducedMotion) {
@@ -91,7 +87,7 @@ export function CameraRig() {
     camera.rotateZ(bank.current)
 
     // FOV kick with velocity — acceleration reads as widening, not speed-up.
-    const fovTarget = CAM.fovBase + CAM.fovKickMax * clamp01((speed - 12) / 130)
+    const fovTarget = camFrame.fov + CAM.fovKickMax * clamp01((speed - 12) / 130)
     const fov = damp(camera.fov, fovTarget, 3, dt)
     if (Math.abs(fov - camera.fov) > 0.005) {
       camera.fov = fov

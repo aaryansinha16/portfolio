@@ -9,8 +9,14 @@ export interface EnvConfig {
   fogColor: string
   /** FogExp2 density. Visibility ≈ 3 / density meters. */
   fogDensity: number
-  /** scene.background — placeholder for the Phase 2 gradient sky shader. */
+  /** scene.background fallback — the gradient sky dome covers it in-frame. */
   skyColor: string
+  /** Gradient sky dome: color straight up. */
+  skyZenith: string
+  /** Gradient sky dome: color at the horizon band (should sit near fogColor). */
+  skyHorizon: string
+  /** Strength of the sun-direction glow baked into the sky dome (0..~1). */
+  sunGlow: number
   sunColor: string
   sunIntensity: number
   /** Degrees around +Y; 0 = behind the start (+Z), 90 = rider's left (+X). */
@@ -57,10 +63,23 @@ export interface FarSilhouetteConfig {
   heightMax: number
 }
 
+/** Optional chase-cam framing overrides, lerped across boundaries like env. */
+export interface CameraConfig {
+  /** Camera height above the road (default 2.1 — car scale). */
+  height?: number
+  /** Lateral offset right of the road center (default 1.2). */
+  right?: number
+  /** Base FOV before velocity kicks (default 45). */
+  fov?: number
+  /** How far the vehicle rides ahead of the camera (default 8.5 — car scale). */
+  chase?: number
+}
+
 export interface ChapterConfig {
   name: string
   env: EnvConfig
   greybox: GreyboxPropsConfig
   far: FarSilhouetteConfig
   seed: number
+  camera?: CameraConfig
 }
