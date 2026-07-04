@@ -5,17 +5,18 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Current state
 
-- **Phase:** 0 done (minus Vercel connect — owner action). 1–2 done (owner confirmed feel
-  after perf fix). 3 BUILT: four procedural vehicles (bicycle/motorcycle/R15/Safari, shared
-  parts kit), scroll-scrubbed swap choreography at the three boundaries (ADR-14), shared
-  headlight pool, speed dust. Swap stills at shots/s1–s3; 60fps gate green.
-- **Next action:** owner scroll-through of the three swap boundaries (Phase 3 accept), then
-  Phase 4 remaining biomes (order: highway → town → city → neon → circuit → prologue polish).
-- **Known gaps:** whip-pan/silhouette swap flourish deferred to Phase 4 Theatre polish
-  (ADR-14). Village terrain seams flat at zone edges by design. Theatre.js still unwired.
-- **Deviations from plan:** scroll runway is 1800vh not 700vh (`SCROLL_PAGES`). ColorScript +
+- **Phases 0–5 COMPLETE.** All seven chapters at art quality, four procedural vehicles with
+  scrub-reversible swaps, two horizontal detours (plateau remap, ADR-15), contact terminal,
+  resume-aligned content. Deployed: push to main → Vercel (repo aaryansinha16/portfolio).
+- **Next action:** Phase 6 (loader, audio, quality toggle, reduced-motion fallback, SEO/OG,
+  cross-browser, perf/memory pass). Then the owner's improvement list as a polish round.
+- **Owner TODOs:** drop resume PDF at public/resume.pdf (contact button auto-appears);
+  full human scroll-through end to end.
+- **Known gaps:** whip-pan/silhouette swap flourish still optional flourish (ADR-14).
+  Theatre.js unwired. Audio not started (Phase 6).
+- **Deviations from plan:** scroll runway 1800vh not 700vh (`SCROLL_PAGES`). ColorScript +
   camera framing are config-lerped systems (height/right/fov/chase per chapter). Swap-window
-  constants (APPROACH/MERGE/PARK_BACK/START_AHEAD/SHOULDER) live in VehicleManager.tsx.
+  constants live in VehicleManager.tsx; detour windows in content.ts DETOURS.
 
 ## Open threads
 

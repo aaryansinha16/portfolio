@@ -17,7 +17,7 @@ Statuses: `[ ]` todo · `[~]` in progress · `[x]` done
 - [x] `Experience.tsx`: Canvas with ACESFilmicToneMapping, SRGBColorSpace, shadows, dpr [1, 2]
 - [x] Post chain mounted (4x MSAA + Vignette + grain — SMAA rejected, see ADR-9)
 - [x] `?debug` flag: r3f-perf, spline visualizer, boundary markers, free-fly camera (F)
-- [ ] Vercel project connected, deploys on push to main ← needs owner's Vercel account
+- [x] Vercel project connected (github.com/aaryansinha16/portfolio), deploys on push to main
 
 **Accept:** empty graded scene deploys to a URL, 60fps, debug tooling works.
 
