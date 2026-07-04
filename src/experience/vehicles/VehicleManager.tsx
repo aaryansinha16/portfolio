@@ -230,9 +230,12 @@ function HeadlightPool() {
     pointAt(p + 3 / totalLength, scratch.v1)
     scratch.v1.y += 1.0
     light.position.copy(scratch.v1)
+    // The ignition beat: dark at rest, the lamp turns ON with the first
+    // scroll (pure function of progress — reverses back to dark at the top).
+    light.intensity = 8 * smoothstep(clamp01((progress - 0.0004) / 0.005))
   })
 
-  return <pointLight ref={lightRef} color="#ffd9a0" intensity={8} distance={26} decay={2} />
+  return <pointLight ref={lightRef} color="#ffd9a0" intensity={0} distance={26} decay={2} />
 }
 
 export function VehicleManager() {
