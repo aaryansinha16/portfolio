@@ -55,3 +55,27 @@ export const CONTACT = {
   github: '',
   linkedin: '',
 } as const
+
+/** Highway hoardings — skills as sun-bleached roadside ads (DESIGN: hoardings double as skill boards). */
+export const SKILL_BOARDS: readonly { title: string; sub: string }[] = [
+  { title: 'REACT · TYPESCRIPT', sub: 'ships production UI since the freelance years' },
+  { title: 'NODE · POSTGRES', sub: 'APIs that survive real traffic' },
+  { title: 'THREE.JS · WEBGL', sub: 'you are driving through one right now' },
+  { title: 'PYTHON · FASTAPI', sub: 'the AI era runs on it' },
+  { title: '12+ PROJECTS SHIPPED', sub: 'before "developer" was a job title' },
+  { title: 'AWS · DOCKER · CI', sub: 'deploys on push, sleeps at night' },
+]
+
+/** Town shopfront signboards — the learning-years street. */
+export const TOWN_SHOPS: readonly { name: string; bg: string }[] = [
+  { name: 'CYBER CAFÉ', bg: '#274e63' },
+  { name: 'BOOK DEPOT', bg: '#7a3327' },
+  { name: 'CHAI POINT', bg: '#5a6631' },
+  { name: 'MOBILE REPAIR', bg: '#31456b' },
+  { name: 'ELECTRICALS', bg: '#6b3f27' },
+  { name: 'GENERAL STORE', bg: '#4e5a2e' },
+  { name: 'TAILORS', bg: '#623253' },
+  { name: 'STATIONERY', bg: '#2e5a50' },
+]
+
+export const DETOUR_SIGN = { title: 'PROJECTS →', sub: '12+ builds, this way' } as const
