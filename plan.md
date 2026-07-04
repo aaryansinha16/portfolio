@@ -66,13 +66,21 @@ on shots/01a–01c.png is the final sign-off
 
 ## Phase 3 — Vehicles & swap set-pieces
 
-- [ ] Source/optimize all four vehicles (gltf-transform: draco, texture resize). Safari and R15
-      should read as *those* vehicles — spend asset budget here
-- [ ] `VehicleManager` + swap set-pieces at boundaries 1→2, 2→3, 3→4 (silhouette + whip-pan
-      technique from DESIGN.md — no rigged character)
-- [ ] Vehicle feel: suspension bob, wheel spin, headlight glow, dust/exhaust particles
+- [x] All four vehicles modeled procedurally from a shared parts kit (ADR-11 held — no glTF
+      pipeline needed): commuter motorcycle (maroon tank, mirrors, chrome exhaust), R15
+      (racing-blue wedge fairings, tail-up stance, twin headlight slits), Safari (stepped
+      rear roof, roof rails, vertical taillights, flared arches). Screenshot-verified reads.
+- [x] `VehicleManager` swap choreography at boundaries 1→2, 2→3, 3→4: pure function of scroll
+      progress — old ride decelerates onto the left shoulder and parks (side-stand lean,
+      nosed-out), new ride waits past the boundary and launches to catch the follow point
+      with matched velocity. Fully scrub-reversible (ADR-14; whip-pan cut variant deferred
+      to Phase 4 Theatre set-piece polish)
+- [x] Vehicle feel: suspension bob, wheel spin (velocity-capped), curve lean per vehicle
+      (bikes bank in, Safari rolls faintly out), ONE shared headlight pool (per-vehicle
+      lights cost 15fps + forced recompiles), speed-driven dust trail tinted by chapter air
 
 **Accept:** each swap is a "wait, that was cool" moment; vehicles never feel like static props.
+← owner scroll-through of the three boundaries is the sign-off; shots/s1–s3 for stills
 
 ## Phase 4 — Remaining biomes (formula scaling)
 

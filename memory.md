@@ -5,17 +5,17 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Current state
 
-- **Phase:** 0 done (minus Vercel connect — owner action). 1 done pending human feel-test.
-  2 (village vertical slice) BUILT: gradient sky dome, village biome (terrain/trees/huts/
-  crops/birds/smoke), procedural bicycle, DoF post chain. Poster shots at `shots/01a–01c.png`
-  — formula locked pending owner eyeball.
-- **Next action:** owner reviews poster shots + scroll feel; connect Vercel. Then Phase 3
-  (vehicles & swap set-pieces) — vehicle sourcing decision at ADR-11.
-- **Known gaps:** bicycle→box vehicle swap at the town boundary is a hard pop (Phase 3
-  set-pieces fix this). Village terrain seams flat at zone edges by design. Theatre.js still
-  unwired (?theatre no-op; camera set-pieces are Phase 3+).
+- **Phase:** 0 done (minus Vercel connect — owner action). 1–2 done (owner confirmed feel
+  after perf fix). 3 BUILT: four procedural vehicles (bicycle/motorcycle/R15/Safari, shared
+  parts kit), scroll-scrubbed swap choreography at the three boundaries (ADR-14), shared
+  headlight pool, speed dust. Swap stills at shots/s1–s3; 60fps gate green.
+- **Next action:** owner scroll-through of the three swap boundaries (Phase 3 accept), then
+  Phase 4 remaining biomes (order: highway → town → city → neon → circuit → prologue polish).
+- **Known gaps:** whip-pan/silhouette swap flourish deferred to Phase 4 Theatre polish
+  (ADR-14). Village terrain seams flat at zone edges by design. Theatre.js still unwired.
 - **Deviations from plan:** scroll runway is 1800vh not 700vh (`SCROLL_PAGES`). ColorScript +
-  camera framing are config-lerped systems (height/right/fov/chase per chapter).
+  camera framing are config-lerped systems (height/right/fov/chase per chapter). Swap-window
+  constants (APPROACH/MERGE/PARK_BACK/START_AHEAD/SHOULDER) live in VehicleManager.tsx.
 
 ## Open threads
 
@@ -25,8 +25,10 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
   35fps regression — never trust dpr-1 numbers). Review the screenshots against the DESIGN
   checklist, don't just trust exit 0.
 
-- Vehicle glTF sourcing: shortlist Quaternius (free, cohesive style), Sketchfab CC-BY low-poly
-  R15-alike + Safari-alike. Decision by Phase 3; a stand-in box is fine until then.
+- ~~Vehicle glTF sourcing~~ RESOLVED 2026-07-04: all four vehicles procedural (ADR-11 held
+  through Phase 3); no asset pipeline. Revisit only if a chapter art pass demands more detail.
+- Boundary marks readable at runtime via `?debug` → `window.__MARKS`
+  (currently .0503/.1995/.3605/.5133/.6710/.8228).
 - Font licensing: Clash Display & Satoshi via Fontshare (free) — confirm webfont weights needed.
 - Domain: reuse existing portfolio domain or new one? (Owner decision, not blocking.)
 - Audio: source engine loops + ambiences (freesound/artlist) — Phase 6, park it.
@@ -54,6 +56,13 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-04 (e)** — Phase 3 built: shared vehicle parts kit (wheels/tubes/wedge/cached
+  materials), commuter motorcycle + R15 + Safari modeled procedurally, swap choreography as
+  pure functions of progress (decel→shoulder-park w/ side-stand lean + nose-out; hermite
+  launch that catches the follow point C1-smooth), per-chapter chase distances for all
+  vehicles, speed dust tinted by chapter air. Perf lesson: per-vehicle point lights cost
+  15fps + recompiles → ONE shared headlight pool; ratchet decline bound raised to 52 so a
+  ~50fps tier yields to a locked-60 tier. Verify gained swap-zone stops; all green.
 - **2026-07-04 (d)** — Perf regression fixed after owner felt frame drops (Retina dpr 2 was
   the blind spot: probes ran dpr 1). Measured 31–38fps + 146ms mount hitch → now 60fps flat,
   worst frame ≤25ms, at dpr 2 even with 2x CPU throttle. Fixes: one-way adaptive quality

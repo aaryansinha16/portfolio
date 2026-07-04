@@ -91,3 +91,16 @@ indistinguishable from a struggling 60, so inclining flip-flops the composer (ea
 measures at deviceScaleFactor 2. Manual quality toggle + real device detection stay Phase 6.
 *Rejected:* incline/decline with fallback (measured flip-flop rebuild spikes), static
 medium-start (punishes strong machines' first impression for nothing).
+
+**ADR-14 · 2026-07-04 · Vehicle swaps are continuous scroll functions, not camera cuts**
+DESIGN.md sketched swaps as whip-pan cuts with silhouettes. Implemented instead as pure
+functions of scroll progress: the old ride eases onto the left shoulder with a C1-continuous
+deceleration profile and parks (side-stand lean, nosed-out); the new ride waits past the
+boundary and launches on a hermite curve that catches the follow point with matched velocity.
+Why: scrub-reversibility (scrolling backward replays the swap in reverse — timeline cuts
+can't do that gracefully), zero authored-state, and the parked old ride stays in the world
+as narrative set dressing. The whip-pan + silhouette figure remains a possible Phase 4
+flourish (Theatre.js authored camera on the master timeline), layered ON TOP of this.
+Also: ONE shared headlight pool instead of per-vehicle point lights — 2–3 dynamic lights
+cost ~15fps at dpr 2 AND changing light counts at swap boundaries forced three.js to
+recompile every program.
