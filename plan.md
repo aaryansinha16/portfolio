@@ -125,19 +125,26 @@ experience without friction — the experience never hides the information.
 
 ## Phase 6 — Polish, resilience, ship
 
-- [ ] Loading experience: fuel-gauge/odometer loader with asset progress (drei useProgress);
-      chapters 2+ stream in behind the prologue
-- [ ] Audio (off by default, tasteful toggle): engine layer tied to scroll velocity, per-chapter
-      ambience crossfades
-- [~] Quality tiers: auto tier ratchet shipped early (ADR-13); manual toggle + real device detect remain; mobile gets reduced
-      post + density but the SAME journey
-- [ ] `prefers-reduced-motion` fallback: chapter-card mode
-- [ ] Fallback static page for WebGL-unavailable + SEO: meta/OG tags, prerendered content in
-      DOM for crawlers (the overlay copy already lives in DOM — verify it's indexable)
-- [ ] Perf pass in `pnpm preview`: budget check per chapter, memory profile across full journey
-      (leak check on chapter mount/unmount cycles)
-- [ ] Cross-browser: Chrome/Firefox/Safari desktop, iOS Safari, Android Chrome
-- [ ] Domain, analytics (Plausible or Vercel), OG image (a Phase-2 poster shot)
+- [x] Loading experience: fuel-gauge loader sweeping on REAL boot signals (mount → fonts →
+      WebGL context → first painted frames) — everything is procedural, so there are no asset
+      bytes to track; chapters already stream ±1 by design
+- [x] Audio (off by default, HUD toggle): SYNTHESIZED engine (detuned saws, pitch/gain ride
+      scroll velocity) + wind bed (noise, opens with speed, darkens at night = the ambience
+      crossfade), starter-whirr ignition; zero asset downloads
+- [x] Quality tiers: auto ratchet (ADR-13) + manual GFX pin in the HUD (persisted); mobile
+      gets reduced dpr/post via the same tiers, same journey
+- [x] `prefers-reduced-motion` fallback: chapter-card mode (StaticJourney — palette-gradient
+      cards, full copy, detour content, contact links; zero canvas)
+- [x] WebGL-unavailable fallback: same StaticJourney; SEO: OG/twitter meta + og.jpg (city
+      poster shot), JSON-LD Person, sr-only full-content block on the 3D path
+- [x] Perf/memory pass: verify now runs journey roundtrips and diffs renderer resources —
+      caught + fixed a CanvasTexture leak (PuffColumn per-mount textures); geometries/
+      textures/programs now flat across roundtrips
+- [~] Cross-browser: Chrome (desktop) automated in verify; CSS compat fallbacks added
+      (color-mix border fallback) + mobile media queries — Firefox/Safari/iOS/Android are a
+      manual owner pass
+- [~] Analytics: Vercel Analytics wired (hostname-guarded locally). OG image ✓. Domain +
+      absolute og:image URL = owner decision
 
 **Accept:** Lighthouse perf ≥ 80 on the fallback path, smooth on a mid phone, share-card looks
 great, zero console errors.

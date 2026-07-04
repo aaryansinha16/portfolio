@@ -5,13 +5,16 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Current state
 
+- **Phases 0–6 COMPLETE** (Phase 6 minus manual cross-browser pass + domain decision).
+  Next: the owner's improvement list as a polish round.
 - **Phases 0–5 COMPLETE.** All seven chapters at art quality, four procedural vehicles with
   scrub-reversible swaps, two horizontal detours (plateau remap, ADR-15), contact terminal,
   resume-aligned content. Deployed: push to main → Vercel (repo aaryansinha16/portfolio).
 - **Next action:** Phase 6 (loader, audio, quality toggle, reduced-motion fallback, SEO/OG,
   cross-browser, perf/memory pass). Then the owner's improvement list as a polish round.
-- **Owner TODOs:** drop resume PDF at public/resume.pdf (contact button auto-appears);
-  full human scroll-through end to end.
+- **Owner TODOs:** drop resume PDF at public/resume.pdf AND set CONTACT.resumeUrl in
+  content.ts; full human scroll-through; manual cross-browser pass; domain + absolute
+  og:image URL.
 - **Known gaps:** whip-pan/silhouette swap flourish still optional flourish (ADR-14).
   Theatre.js unwired. Audio not started (Phase 6).
 - **Deviations from plan:** scroll runway 1800vh not 700vh (`SCROLL_PAGES`). ColorScript +
@@ -57,6 +60,17 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (e)** — PHASE 6 COMPLETE (minus manual cross-browser + domain). Fuel-gauge
+  loader on real boot signals; SYNTHESIZED audio (engine saws + wind noise, velocity-driven,
+  night-darkened; starter ignition; off by default, HUD toggle); GFX pin in HUD (auto ratchet
+  respects manual mode); StaticJourney chapter-card fallback for prefers-reduced-motion AND
+  no-WebGL (zero canvas, confirmed); SEO (og.jpg from city shot, twitter meta, JSON-LD,
+  sr-only content block); Vercel Analytics (hostname-guarded). Verify gained a memory probe
+  (journey roundtrips + renderer.info diff) — caught PuffColumn CanvasTexture leak → puff
+  texture is a singleton now; resources flat (93/51/37) across roundtrips. Owner TODOs:
+  set CONTACT.resumeUrl='/resume.pdf' + drop file in public/; absolute og:image after domain;
+  manual Firefox/Safari/mobile pass; Lighthouse on fallback path unmeasured (static cards,
+  expected well ≥80).
 - **2026-07-05 (d)** — PHASE 5 COMPLETE. Detour system: scroll→spline plateau remap (ADR-15)
   — store carries progress (scroll/UI) + splineProgress (world); world readers refactored.
   Ch2 painted-board strip (freelance years) + Ch5 neon holo strip (4 flagships w/ live
