@@ -157,8 +157,8 @@ function ChoreoVehicle({ def }: { def: VehicleDef }) {
     const group = groupRef.current
     if (!group) return
     const dt = clamp(rawDt, 1e-4, 0.1)
-    const { progress, velocity, reducedMotion } = useJourney.getState()
-    const m = vehicleProgressAt(progress) * totalLength
+    const { splineProgress, velocity, reducedMotion } = useJourney.getState()
+    const m = vehicleProgressAt(splineProgress) * totalLength
 
     stateFor(def, m, sNow)
     stateFor(def, m + 3, sAhead)
@@ -225,8 +225,8 @@ function HeadlightPool() {
   useFrame(() => {
     const light = lightRef.current
     if (!light) return
-    const { progress } = useJourney.getState()
-    const p = vehicleProgressAt(progress)
+    const { progress, splineProgress } = useJourney.getState()
+    const p = vehicleProgressAt(splineProgress)
     pointAt(p + 3 / totalLength, scratch.v1)
     scratch.v1.y += 1.0
     light.position.copy(scratch.v1)

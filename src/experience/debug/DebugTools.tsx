@@ -43,7 +43,7 @@ export default function DebugTools() {
   // When free-fly engages, park the orbit target where the vehicle is.
   useEffect(() => {
     if (freeFly && controlsRef.current) {
-      const target = pointAt(useJourney.getState().progress, new Vector3())
+      const target = pointAt(useJourney.getState().splineProgress, new Vector3())
       controlsRef.current.target.copy(target)
       controlsRef.current.update()
     }

@@ -27,8 +27,8 @@ export function Atmosphere() {
   const fog = useMemo(() => new FogExp2(new Color('#171b2c'), 0.015), [])
 
   useFrame(() => {
-    const { progress } = useJourney.getState()
-    sampleEnv(progress, env)
+    const { splineProgress } = useJourney.getState()
+    sampleEnv(splineProgress, env)
 
     if (scene.fog !== fog) scene.fog = fog
     fog.color.copy(env.fogColor)
@@ -49,7 +49,7 @@ export function Atmosphere() {
 
     const sun = sunRef.current
     if (sun) {
-      const vehiclePos = pointAt(vehicleProgressAt(progress), scratch.v1)
+      const vehiclePos = pointAt(vehicleProgressAt(splineProgress), scratch.v1)
       sun.color.copy(env.sunColor)
       sun.intensity = env.sunIntensity
       sun.position.copy(vehiclePos).addScaledVector(env.sunDir, SUN_DISTANCE)

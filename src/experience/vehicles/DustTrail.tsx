@@ -35,7 +35,7 @@ export function DustTrail() {
   useFrame(({ clock, camera }) => {
     const mesh = meshRef.current
     if (!mesh) return
-    const { progress, velocity } = useJourney.getState()
+    const { splineProgress, velocity } = useJourney.getState()
     const intensity = clamp01((velocity - 25) / 90)
 
     if (intensity <= 0.01) {
@@ -56,7 +56,7 @@ export function DustTrail() {
 
     material.color.copy(frameEnv.fogColor).multiplyScalar(1.08)
 
-    const p = vehicleProgressAt(progress)
+    const p = vehicleProgressAt(splineProgress)
     const t = clock.elapsedTime
     for (let i = 0; i < COUNT; i++) {
       const life = (t * 0.85 + i / COUNT) % 1

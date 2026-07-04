@@ -21,11 +21,11 @@ function CircuitPulse() {
   const { components, chips, caps } = useMemo(getCircuitComponents, [])
 
   useFrame(({ clock }) => {
-    const { progress } = useJourney.getState()
+    const { splineProgress } = useJourney.getState()
     const bf = getBoardFrame()
     // vehicle position in zone-6 meters → normalized pulse front. Negative
     // range covers the ramp feeder traces climbing toward the board.
-    const mInZone = (vehicleProgressAt(progress) - CHAPTER_MARKS[6]) * totalLength
+    const mInZone = (vehicleProgressAt(splineProgress) - CHAPTER_MARKS[6]) * totalLength
     const front = clamp(pulseFrontAt(mInZone), -0.9, 1.1)
     traceMaterial.uniforms.uFront.value = front
     traceMaterial.uniforms.uTime.value = clock.elapsedTime

@@ -46,8 +46,8 @@ export function PostFX() {
   }, [focus, quality])
 
   useFrame(() => {
-    const { progress } = useJourney.getState()
-    const zf = zoneFloat(progress)
+    const { splineProgress } = useJourney.getState()
+    const zf = zoneFloat(splineProgress)
     // Heat shimmer peaks mid-highway (zone 3), gone by the neighbors.
     haze.setIntensity(Math.max(0, 1 - Math.abs(zf - 3) * 1.4) * 0.9)
     // Bloom rises through dusk (4), peaks at neon night (5), eases on the
@@ -59,7 +59,7 @@ export function PostFX() {
       bloomRef.current.intensity = Math.min(1, night)
     }
     if (!dofRef.current) return
-    pointAt(vehicleProgressAt(progress), focus)
+    pointAt(vehicleProgressAt(splineProgress), focus)
     focus.y += 0.7
   })
 
