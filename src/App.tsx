@@ -3,10 +3,18 @@ import { Experience } from './experience/Experience'
 import { initScrollSpine, SCROLL_PAGES } from './experience/ScrollSpine'
 import { ContactTerminal } from './ui/ContactTerminal'
 import { DetourOverlay } from './ui/DetourOverlay'
+import { HudControls } from './ui/HudControls'
 import { Loader } from './ui/Loader'
 import { Overlay } from './ui/Overlay'
+import { SeoContent } from './ui/SeoContent'
+import { StaticJourney } from './ui/StaticJourney'
+import { PREFERS_REDUCED_MOTION } from './utils/query'
+import { webglAvailable } from './utils/webgl'
 
-export default function App() {
+// Reduced motion gets the chapter-card journey (DESIGN); so does no-WebGL.
+const USE_FALLBACK = PREFERS_REDUCED_MOTION || !webglAvailable()
+
+function DrivenJourney() {
   useEffect(() => initScrollSpine(), [])
 
   return (
@@ -17,7 +25,13 @@ export default function App() {
       <Overlay />
       <DetourOverlay />
       <ContactTerminal />
+      <HudControls />
       <Loader />
+      <SeoContent />
     </>
   )
+}
+
+export default function App() {
+  return USE_FALLBACK ? <StaticJourney /> : <DrivenJourney />
 }
