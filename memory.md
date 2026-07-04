@@ -5,15 +5,17 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Current state
 
-- **Phase:** 0 done (minus Vercel connect — owner action); 1 done pending the human feel-test.
-  Full greybox journey drives end-to-end at 60fps, 0 console errors (verified headless Chrome).
-- **Next action:** owner scroll-feel test (plan.md Phase 1 accept), connect Vercel; then
-  Phase 2 village vertical slice.
-- **Go/no-go gate ahead:** Phase 2 village slice must pass the poster test before scaling.
-- **Deviations from plan:** scroll runway is 1800vh not 700vh (`SCROLL_PAGES` in ScrollSpine.ts)
-  — 700vh crossed a whole chapter per wheel-flick. ColorScript pulled forward from Phase 2
-  (greybox needed per-zone fog/sun/sky anyway). Theatre.js installed but not wired (?theatre
-  is a no-op until Phase 2 camera set-pieces).
+- **Phase:** 0 done (minus Vercel connect — owner action). 1 done pending human feel-test.
+  2 (village vertical slice) BUILT: gradient sky dome, village biome (terrain/trees/huts/
+  crops/birds/smoke), procedural bicycle, DoF post chain. Poster shots at `shots/01a–01c.png`
+  — formula locked pending owner eyeball.
+- **Next action:** owner reviews poster shots + scroll feel; connect Vercel. Then Phase 3
+  (vehicles & swap set-pieces) — vehicle sourcing decision at ADR-11.
+- **Known gaps:** bicycle→box vehicle swap at the town boundary is a hard pop (Phase 3
+  set-pieces fix this). Village terrain seams flat at zone edges by design. Theatre.js still
+  unwired (?theatre no-op; camera set-pieces are Phase 3+).
+- **Deviations from plan:** scroll runway is 1800vh not 700vh (`SCROLL_PAGES`). ColorScript +
+  camera framing are config-lerped systems (height/right/fov/chase per chapter).
 
 ## Open threads
 
@@ -29,6 +31,12 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Tried & rejected
 
+- (2026-07-04) **postprocessing ≥6.38 with any depth-consuming effect** — its stable-depth
+  blitFramebuffer path throws GL_INVALID_OPERATION per frame on ANGLE-Metal (macOS Chrome).
+  Pinned 6.36.4 via pnpm override. ADR-12. Unpin only after re-running `pnpm verify` clean.
+- (2026-07-04) **Spiky cone crops** — read as tiny conifers, not mustard. Squashed
+  icosahedron blobs (wider than tall) read as crop mass. Same lesson likely applies to any
+  small organic prop.
 - (2026-07-04) **SMAA effect** — postprocessing's SMAA triggers per-frame
   `glBlitFramebuffer: Read and write depth stencil attachments cannot be the same image` on
   Chrome/ANGLE-Metal (macOS), including real user-facing Chrome. Isolated empirically
@@ -44,6 +52,14 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-04 (c)** — Phase 2 vertical slice built: gradient sky dome (per-chapter
+  zenith/horizon/sun-glow, tone-mapped shader), per-chapter camera framing incl. chase
+  distance (bicycle 6m vs car 8.5m), procedural bicycle (spin, lean-into-curves, lamp),
+  village biome — noise terrain w/ flat road corridor + edge fade, mustard/green fields baked
+  into vertex colors, instanced trees/huts (doors, terracotta/thatch roofs), 5k swaying
+  crops, bird flock, hearth smoke — and DoF focused on the vehicle. postprocessing pinned
+  6.36.4 (ADR-12). Verified: 9 stops, 60fps everywhere, 0 errors/GL warnings; two
+  screenshot-review rounds (crops de-spiked, chase tightened, terrain edge fade).
 - **2026-07-04 (b)** — Phases 0+1 built: scaffold, spline (~3.4km, 7 zones, computed
   CHAPTER_MARKS), road ribbon w/ per-zone tint, scroll spine (Lenis+ScrollTrigger master
   timeline), chase cam (bank/FOV-kick/shake), greybox biomes + far silhouettes, ColorScript

@@ -61,3 +61,20 @@ antialias (does nothing once the composer renders offscreen).
 README pins React 18; fiber 9/drei 10 require React 19 and would force the whole ecosystem
 forward mid-build for zero visual gain. Locked: three 0.169, fiber 8.17, drei 9.122,
 postprocessing 2.16, zustand 5, lenis 1.1, gsap 3.12. Revisit only as its own migration task.
+
+**ADR-11 · 2026-07-04 · Vehicles modeled procedurally, not sourced (v1)**
+Phase 2 allowed "source glTF or model simple one" for the bicycle. Modeled it from primitives
+(~20 meshes: tube helper + torus wheels + emissive lamp). Wins: zero asset pipeline, zero
+licensing risk, style-locked to the world by construction, headless-verifiable. The Phase 3
+decision point stands for R15/Safari — if primitives can't hit "reads as THAT vehicle,"
+source CC glTFs then (memory.md open thread).
+*Rejected for now:* downloading Sketchfab/Quaternius assets (license vetting + gltf pipeline
+before the visual formula was proven).
+
+**ADR-12 · 2026-07-04 · postprocessing pinned to 6.36.4 (pnpm override)**
+6.38+ introduced a "stable depth texture" that's re-populated every frame via
+gl.blitFramebuffer — that blit throws GL_INVALID_OPERATION per frame on Chrome's ANGLE-Metal
+backend (macOS) whenever any effect consumes depth (DoF; SMAA's depth path too). 6.36.4 uses
+the older attach-depth-texture-directly architecture: verified 0 GL warnings with
+4x MSAA + DepthOfField. Supersedes the "MSAA works around it" half of ADR-9 (SMAA→MSAA choice
+stands on quality/size regardless). Unpin when postprocessing fixes the Metal blit upstream.

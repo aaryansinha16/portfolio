@@ -45,20 +45,24 @@ reaction is meh at the feel level, tune before Phase 2.
 
 ## Phase 2 — Vertical slice: Village Dawn at full quality ← the visual go/no-go gate
 
-- [ ] ColorScript system: per-chapter env config (fog, sun, sky gradient, grade) with boundary
-      lerps
-- [ ] Village biome: low-poly terrain w/ vertex-color variation, instanced trees/huts/fields,
-      3-layer depth (fields → huts/trees → fog-faded hills)
-- [ ] Dawn lighting: warm key sun low on horizon, long soft shadows, sky gradient shader
-- [ ] Ambient movers: birds (instanced, simple sine paths), smoke wisps from chimneys, swaying
-      crops (vertex shader)
-- [ ] Bicycle model (source glTF or model simple one), wheel rotation + lean tied to speed
-- [ ] Full post chain tuned for this chapter; DoF focused on bicycle
-- [ ] Chapter title overlay + first copy pass
-- [ ] Run the DESIGN.md quality checklist; screenshot poster test
+- [x] ColorScript system: per-chapter env config (fog, sun, sky gradient dome w/ sun glow,
+      exposure-as-grade) with boundary lerps; per-chapter camera framing (height/right/fov/chase)
+      lerped the same way
+- [x] Village biome: rolling flat-shaded terrain w/ vertex-color variation + baked field rows,
+      instanced trees/huts/crops, 3-layer depth (fields → huts/trees → fog-faded hills)
+- [x] Dawn lighting: warm key sun low on horizon, long soft shadows, sky gradient shader
+      (peach→lavender dome + sun glow)
+- [x] Ambient movers: birds (instanced V-flock, sine paths), smoke wisps from hearth huts,
+      swaying crops (vertex-stage sway injected via onBeforeCompile)
+- [x] Bicycle modeled procedurally (ADR-11), wheel spin + lean into curves tied to speed
+- [x] Full post chain tuned: 4x MSAA, DoF focused on the vehicle (postprocessing pinned — ADR-12),
+      vignette, grain
+- [x] Chapter title overlay + first copy pass (from Phase 1)
+- [x] DESIGN.md quality checklist run; poster test: shots/01a–01c
 
 **Accept:** three screenshots from this chapter that could pass as an indie-game press kit.
-This locks the visual formula every other chapter copies.
+This locks the visual formula every other chapter copies. ← formula locked; owner eyeball
+on shots/01a–01c.png is the final sign-off
 
 ## Phase 3 — Vehicles & swap set-pieces
 
