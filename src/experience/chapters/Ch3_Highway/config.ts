@@ -7,7 +7,7 @@ export const highwayConfig: ChapterConfig = {
   camera: { height: 1.9, right: 1.0, fov: 46, chase: 7.2 },
   env: {
     fogColor: '#d8dfe2',
-    fogDensity: 0.0052,
+    fogDensity: 0.0034,
     skyColor: '#e6eef2',
     skyZenith: '#b4cfe0',
     skyHorizon: '#edf2f4',

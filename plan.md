@@ -151,6 +151,33 @@ great, zero console errors.
 
 ---
 
+## Polish round 3 — owner re-review (2026-07-05) — ALL DONE
+
+- [x] 1: village sign posts poked over the panel → twin posts now sit BEHIND the board,
+      tops tucked under its upper edge. Content is real journey copy: three rural
+      hoardings ("IT ALL STARTED WITH NO-CODE GIGS", "SELF-TAUGHT: HTML → CSS → JS",
+      "FIRST FREELANCE ₹ BEFORE ANY JOB TITLE") between the quirky small markers
+- [x] 2: town says something now — six rooftop hoardings on houses with real gaps
+      (~90m apart, alternating sides): WordPress→custom code, first React app, 12+
+      freelance builds, socket.io chat, payments, Shopify
+- [x] 3: highway fog 0.0052 → 0.0034 (clear noon); the banner plane flies a LOW,
+      ROAD-ALIGNED circuit (y≈22, ±42m of the lanes, 45s loop) at 1.45× scale with a
+      bigger brighter banner — it crosses the driver's view every pass
+- [x] 4: gantry text "duplicated above each other" = TWO stacked causes: DoF half-res
+      bokeh ghosting mid-distance emissives (focusRange 30→70, bokehScale 2.2→1.5) AND
+      the glow painter's per-pass maxWidth condensation misregistering long titles
+      (now one measured-to-fit font for all passes + subs render in glow mode).
+      Career boards keep 34m clear of gantries; face choice blends road-facing with
+      APPROACH-facing (Eigenlytics × Luxia now fronts the driver)
+- [x] 5: showroom span 96m → 190m (~55m between boards), boards out at 13.5m lateral,
+      and neon towers are CLEARED out of the showroom corridor (road-projection filter)
+      — no more half-swallowed Maestro/Devovia. Ambient AI-name neon signs removed
+      (they duplicated the clickable boards' content)
+- [x] 6: autopilot never engaged on real hardware — v2 cancelled on the trackpad's own
+      momentum tail. v3 engages after 0.8s of input SILENCE, pauses on any input,
+      re-engages when quiet, re-arms on leaving ch6. Verify now simulates a momentum
+      tail before asserting self-drive
+
 ## Polish round 2 — owner feedback on the first pass (2026-07-05) — ALL DONE
 
 - [x] 1: town elements STILL floating — root cause found: the facade code treated a

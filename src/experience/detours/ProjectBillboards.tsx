@@ -141,11 +141,12 @@ export function ProjectBillboards() {
     const pos = new Vector3()
     // spread along the whole slow-motion run, alternating sides — the ride
     // rolls past one board at a time instead of parking in a cluster
+    // (neonField clears the towers out of this corridor)
     return panels.map((panel, i) => {
       const side = i % 2 === 0 ? -1 : 1
-      const m = startM + 10 + (i * (spanM - 16)) / Math.max(1, panels.length - 1)
+      const m = startM + 14 + (i * (spanM - 26)) / Math.max(1, panels.length - 1)
       const s = road.at(m)
-      road.place(m, 12 * side, pos)
+      road.place(m, 13.5 * side, pos)
       return {
         panel,
         pos: new Vector3(pos.x, pos.y + 5.6, pos.z),

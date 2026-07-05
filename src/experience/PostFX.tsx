@@ -65,7 +65,10 @@ export function PostFX() {
 
   const effects: ReactElement[] = [<primitive key="haze" object={haze} />]
   if (quality === 'high') {
-    effects.push(<DepthOfField key="dof" ref={dofRef} worldFocusRange={30} bokehScale={2.2} />)
+    // Wide focus range + small kernel: at range 30 / scale 2.2 the half-res
+    // bokeh GHOSTED mid-distance emissive signage (gantry text read as
+    // "duplicated"). Signage must be sharp everywhere the driver can read it.
+    effects.push(<DepthOfField key="dof" ref={dofRef} worldFocusRange={70} bokehScale={1.5} />)
   }
   if (quality !== 'low') {
     effects.push(

@@ -70,16 +70,37 @@ export function makeTextPanel(spec: TextPanelSpec): CanvasTexture {
     ctx.fillText(spec.title, 0, 0, w * 0.9)
     ctx.restore()
   } else if (spec.glow) {
-    // neon: wide soft halo, then a tighter pass, then a near-white core
+    // neon: wide soft halo, then a tighter pass, then a near-white core.
+    // Every pass uses ONE measured-to-fit font — fillText's maxWidth arg
+    // condenses each pass differently and long titles read double-struck.
+    const titleY = spec.sub ? h * 0.4 : h * 0.5
+    let size = titleSize
+    ctx.font = `900 ${size}px 'Arial Narrow', 'Arial Black', sans-serif`
+    while (size > h * 0.12 && ctx.measureText(spec.title).width > w * 0.86) {
+      size -= 2
+      ctx.font = `900 ${size}px 'Arial Narrow', 'Arial Black', sans-serif`
+    }
     ctx.shadowColor = spec.fg
     ctx.shadowBlur = h * 0.22
-    ctx.fillText(spec.title, w / 2, h * 0.5, w * 0.86)
+    ctx.fillText(spec.title, w / 2, titleY)
     ctx.shadowBlur = h * 0.1
-    ctx.fillText(spec.title, w / 2, h * 0.5, w * 0.86)
+    ctx.fillText(spec.title, w / 2, titleY)
     ctx.shadowBlur = 0
     ctx.fillStyle = '#f4ffff'
-    ctx.font = `700 ${titleSize * 0.94}px 'Arial Narrow', 'Arial Black', sans-serif`
-    ctx.fillText(spec.title, w / 2, h * 0.5, w * 0.86)
+    ctx.fillText(spec.title, w / 2, titleY)
+    if (spec.sub) {
+      ctx.fillStyle = spec.fg
+      let subSize = h * 0.15
+      ctx.font = `700 ${subSize}px 'Arial Narrow', Arial, sans-serif`
+      while (subSize > h * 0.08 && ctx.measureText(spec.sub).width > w * 0.8) {
+        subSize -= 1
+        ctx.font = `700 ${subSize}px 'Arial Narrow', Arial, sans-serif`
+      }
+      ctx.shadowColor = spec.fg
+      ctx.shadowBlur = h * 0.06
+      ctx.fillText(spec.sub, w / 2, h * 0.78)
+      ctx.shadowBlur = 0
+    }
   } else {
     ctx.fillText(spec.title, w / 2, spec.sub ? h * 0.42 : h * 0.5, w * 0.86)
     if (spec.sub) {

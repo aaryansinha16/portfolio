@@ -60,6 +60,20 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (h)** — POLISH ROUND 3. Autopilot lesson: NEVER cancel-on-input for
+  handover features — trackpad momentum tails fire wheel events 1-2s after fingers lift,
+  so "any input cancels" means "never runs" on real hardware while headless probes stay
+  green. Quiet-period engage (0.8s silence) + pause-and-resume is the right shape; verify
+  must SIMULATE the momentum tail. Text "duplication" on gantries was two stacked causes:
+  DoF half-res bokeh ghosts mid-distance emissive text (keep signage inside worldFocusRange),
+  and canvas fillText(maxWidth) condenses each glow pass differently → measure-fit ONE font
+  size for all passes, never pass maxWidth to multi-pass text. Verify-harness lesson: the
+  fps gate shared the screenshot marathon's browser — its GPU process reads ~10fps low
+  afterward; perf now gets a fresh browser (and re-probe isolated before chasing "regressions").
+  Banner plane: world-axis ellipses drift out of view — ambient flyers should orbit in the
+  ROAD frame (along/lateral), low and tight. Ch5 ambient project signs removed: never show
+  the same names twice (ambient + interactive) — reads as a render bug.
+
 - **2026-07-05 (g)** — POLISH ROUND 2 (owner re-review: "still broken" items). Real root
   causes this time: (1) traffic jerk was ZoneRoad.at() NEAREST-SAMPLE snapping (4m grid) —
   movers need road.sample() lerp, statics can keep at(); (2) town floaters were an AXIS

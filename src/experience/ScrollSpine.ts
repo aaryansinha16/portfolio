@@ -65,49 +65,63 @@ export function initScrollSpine(): () => void {
   lenis.on('scroll', ScrollTrigger.update)
 
   /* Ch6 autopilot (owner request): entering the circuit hands the wheel
-   * over — the ride drives itself to the road's end (and off it). Driven
-   * per-tick with immediate scrollTo steps: a single long lenis tween dies
-   * to any trackpad inertia, which is why v1 "never happened". Any real
-   * input hands control back; leaving ch6 re-arms it for the next visit. */
-  let apState: 'armed' | 'running' | 'done' = 'armed'
+   * over — the ride drives itself to the road's end (and off it).
+   *
+   * v1 died silently on real hardware: it cancelled on ANY wheel event,
+   * and a trackpad's momentum tail fires wheel events for 1–2s after the
+   * fingers lift — the very scroll that ENTERS ch6 killed it every time
+   * (headless probes send no wheel events, so the gate stayed green).
+   * v2 waits for a QUIET PERIOD instead: once no input has arrived for
+   * 0.8s inside ch6, the wheel turns itself; any new input pauses it and
+   * restarts the quiet timer; leaving ch6 disarms and re-arms fresh. */
+  let apState: 'disarmed' | 'waiting' | 'driving' | 'done' = 'disarmed'
+  let apQuiet = 0 // seconds since the last user input
   let apSpeed = 0 // scroll px/s
   let apRamp = 0 // seconds since engage (eases in)
-  const cancelAutopilot = () => {
-    if (apState === 'running') apState = 'done'
+  const onApInput = () => {
+    apQuiet = 0
+    if (apState === 'driving') apState = 'waiting'
   }
-  const AP_CANCEL_EVENTS: readonly (keyof WindowEventMap)[] = [
+  const AP_INPUT_EVENTS: readonly (keyof WindowEventMap)[] = [
     'wheel',
     'touchstart',
     'pointerdown',
     'keydown',
   ]
-  AP_CANCEL_EVENTS.forEach((e) => window.addEventListener(e, cancelAutopilot, { passive: true }))
+  AP_INPUT_EVENTS.forEach((e) => window.addEventListener(e, onApInput, { passive: true }))
   const unsubAutopilot = useJourney.subscribe(
     (s) => s.chapter,
     (chapter) => {
       if (chapter < 6) {
-        apState = 'armed'
-      } else if (chapter === 6 && apState === 'armed' && !PREFERS_REDUCED_MOTION && lenis) {
-        apState = 'running'
-        apRamp = -0.7 // a short beat before the wheel turns itself
-        apSpeed = Math.max(60, (lenis.limit - lenis.scroll) / 15)
+        apState = 'disarmed'
+      } else if (apState === 'disarmed' && !PREFERS_REDUCED_MOTION) {
+        apState = 'waiting'
+        apQuiet = 0
       }
     },
   )
 
   const tick = (time: number, deltaMs: number) => {
     lenis?.raf(time * 1000)
-    if (apState === 'running' && lenis) {
-      if (lenis.scroll >= lenis.limit - 1) {
-        apState = 'done'
-      } else {
-        apRamp += deltaMs / 1000
-        if (apRamp > 0) {
-          const ease = Math.min(1, apRamp / 2.2) // gentle pull-away
-          const next = Math.min(lenis.scroll + apSpeed * ease * (deltaMs / 1000), lenis.limit)
-          lenis.scrollTo(next, { immediate: true })
+    if (!lenis) return
+    const dt = deltaMs / 1000
+    if (apState === 'waiting') {
+      apQuiet += dt
+      if (apQuiet >= 0.8) {
+        if (lenis.scroll >= lenis.limit - 2) {
+          apState = 'done'
+        } else {
+          apState = 'driving'
+          apRamp = 0
+          apSpeed = Math.max(60, (lenis.limit - lenis.scroll) / 15)
         }
       }
+    } else if (apState === 'driving') {
+      apRamp += dt
+      const ease = Math.min(1, apRamp / 2.2) // gentle pull-away
+      const next = Math.min(lenis.scroll + apSpeed * ease * dt, lenis.limit)
+      lenis.scrollTo(next, { immediate: true })
+      if (next >= lenis.limit - 1) apState = 'done'
     }
   }
   gsap.ticker.add(tick)
@@ -146,7 +160,7 @@ export function initScrollSpine(): () => void {
 
   return () => {
     unsubAutopilot()
-    AP_CANCEL_EVENTS.forEach((e) => window.removeEventListener(e, cancelAutopilot))
+    AP_INPUT_EVENTS.forEach((e) => window.removeEventListener(e, onApInput))
     master?.scrollTrigger?.kill()
     master?.kill()
     master = null

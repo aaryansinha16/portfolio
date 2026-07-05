@@ -14,7 +14,7 @@ import {
 import { getZoneRoad } from '../../world/roadSamples'
 import { makeTextPanel } from '../../world/textPanel'
 import { createRng, rngRange } from '../../../utils/random'
-import { DETOUR_SIGN, TOWN_GRAFFITI, TOWN_SHOPS } from '../../../content'
+import { DETOUR_SIGN, TOWN_GRAFFITI, TOWN_ROOF_BOARDS, TOWN_SHOPS } from '../../../content'
 
 /**
  * Ch2 Town statics, built once and module-cached: a dense shop street —
@@ -34,6 +34,7 @@ const POLE_MAT = new MeshStandardMaterial({ color: '#3d3a36', roughness: 0.85 })
 const WIRE_MAT = new MeshStandardMaterial({ color: '#1c1a18', roughness: 1 })
 const CRATE_MAT = new MeshStandardMaterial({ roughness: 0.95 })
 const SACK_MAT = new MeshStandardMaterial({ roughness: 1 })
+const BACK_PANEL_MAT = new MeshStandardMaterial({ color: '#2b2620', roughness: 0.9 })
 const POLE_GEO = new CylinderGeometry(0.09, 0.12, 1, 6)
 const SACK_GEO = new IcosahedronGeometry(1, 0)
 const SIGN_GEO = new PlaneGeometry(1, 1)
@@ -129,6 +130,18 @@ export function getTownStatics(): Group {
   }[] = []
   const smoke: Vector3[] = []
   const laundry: LaundryLine[] = []
+  // every building's roof-front, so the rooftop hoardings can pick spread-out
+  // mounts after the street exists
+  const roofCandidates: {
+    m: number
+    side: number
+    x: number
+    y: number
+    z: number
+    ox: number
+    oz: number
+    faceYaw: number
+  }[] = []
 
   /* the street: building slots every ~11.5m, both sides.
    *
@@ -190,6 +203,10 @@ export function getTownStatics(): Group {
       // front face center, on the road side of the slab
       const fx = pos.x + ox * (depth / 2 + 0.03)
       const fz = pos.z + oz * (depth / 2 + 0.03)
+
+      if (height >= 6) {
+        roofCandidates.push({ m, side, x: fx, y: pos.y + height, z: fz, ox, oz, faceYaw })
+      }
 
       const isShop = rng() < 0.62
       if (isShop) {
@@ -429,6 +446,76 @@ export function getTownStatics(): Group {
   const signBackMesh = new InstancedMesh(BOX, DARK_INSET_MAT, signBacks.length)
   fill(signBackMesh, signBacks)
   group.add(signBackMesh)
+
+  /* rooftop hoardings — the freelance years told from the skyline (owner:
+     the town looked right but said nothing). Six boards spread along the
+     street with real gaps, alternating sides, mounted at each house's
+     roof-front on twin posts. */
+  {
+    const targets = [60, 150, 240, 330, 420, 500]
+    const used = new Set<number>()
+    TOWN_ROOF_BOARDS.forEach((entry, bi) => {
+      const wantSide = bi % 2 === 0 ? -1 : 1
+      let best = -1
+      let bestD = Infinity
+      roofCandidates.forEach((cand, ci) => {
+        if (cand.side !== wantSide || used.has(ci)) return
+        const d = Math.abs(cand.m - targets[bi])
+        if (d < bestD) {
+          bestD = d
+          best = ci
+        }
+      })
+      if (best < 0) return
+      used.add(best)
+      const spot = roofCandidates[best]
+
+      const panelW = 7.2
+      const panelH = 2.7
+      const panelY = spot.y + 2.15
+      const tex = makeTextPanel({
+        title: entry.title,
+        sub: entry.sub,
+        bg: entry.bg,
+        fg: '#e8e2d0',
+        border: '#e8e2d066',
+        bleach: 0.15,
+        w: 1024,
+        h: 384,
+      })
+      const panel = new Mesh(
+        new PlaneGeometry(panelW, panelH),
+        new MeshStandardMaterial({
+          map: tex,
+          emissive: '#ffffff',
+          emissiveMap: tex,
+          emissiveIntensity: 0.24,
+          roughness: 0.85,
+        }),
+      )
+      panel.position.set(spot.x, panelY, spot.z)
+      panel.rotation.y = spot.faceYaw
+      panel.castShadow = true
+      const backing = new Mesh(new PlaneGeometry(panelW + 0.2, panelH + 0.2), BACK_PANEL_MAT)
+      backing.position.copy(panel.position)
+      backing.rotation.y = spot.faceYaw
+      backing.translateZ(-0.05)
+      group.add(backing, panel)
+
+      // twin posts from the roof to the panel, tucked behind its face
+      for (const off of [-panelW * 0.36, panelW * 0.36]) {
+        const post = new Mesh(POLE_GEO, POLE_MAT)
+        const h = panelY - spot.y + panelH * 0.2
+        post.position.set(
+          spot.x + Math.cos(spot.faceYaw) * off - spot.ox * 0.14,
+          spot.y + h / 2,
+          spot.z - Math.sin(spot.faceYaw) * off - spot.oz * 0.14,
+        )
+        post.scale.set(0.9, h, 0.9)
+        group.add(post)
+      }
+    })
+  }
 
   /* power poles (right side) + sagging wires */
   const poles: Inst[] = []

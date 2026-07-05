@@ -6,10 +6,11 @@ import { terrainHeightAt } from './villageField'
 import { VILLAGE_SIGNS } from '../../../content'
 
 /**
- * Hand-painted learning signboards along the village road — the first
- * HTML/CSS/JS days as roadside markers. They sit in the low dawn light, so
- * the paint gets a gentle emissive lift (owner: the text only resolved at
- * arm's length before) and the boards are big enough to read on approach.
+ * The village tells the origin story: small rural hoardings carry real
+ * journey lines ("it all started with no-code gigs…") and little
+ * hand-painted markers keep the quirk between them. Posts stand BEHIND
+ * the panels (owner: they poked out over the face) and every board gets
+ * an emissive lift so the dawn shade never swallows the paint.
  */
 
 const POST_GEO = new CylinderGeometry(0.05, 0.06, 1, 5)
@@ -24,25 +25,34 @@ function getSignsGroup(): Group {
   const group = new Group()
   const pos = new Vector3()
 
-  VILLAGE_SIGNS.forEach((text, i) => {
+  VILLAGE_SIGNS.forEach((sign, i) => {
     const m = 35 + (i * (road.zoneMeters - 80)) / (VILLAGE_SIGNS.length - 1)
     const side = i % 2 === 0 ? -1 : 1
     const s = road.at(m)
-    road.place(m, 5.35 * side, pos)
+    const big = sign.big === true
+    road.place(m, (big ? 7.0 : 5.35) * side, pos)
     const y = terrainHeightAt(pos.x, pos.z)
-    const yaw = Math.atan2(s.tx, s.tz) + Math.PI + side * 0.18
+    const yaw = Math.atan2(s.tx, s.tz) + Math.PI + side * (big ? 0.26 : 0.18)
+    // the board's facing direction — posts hide a step behind it
+    const fx = Math.sin(yaw)
+    const fz = Math.cos(yaw)
+
+    const panelW = big ? 5.6 : 2.3
+    const panelH = big ? 2.35 : 1.06
+    const panelY = big ? 3.0 : 1.72
 
     const tex = makeTextPanel({
-      title: text,
-      bg: '#f2ead2',
+      title: sign.text,
+      sub: sign.sub,
+      bg: big ? '#ecdfbe' : '#f2ead2',
       fg: '#241c12',
-      border: '#6b5a40',
-      bleach: 0.12,
-      w: 512,
-      h: 236,
+      border: big ? '#b0492e' : '#6b5a40',
+      bleach: big ? 0.18 : 0.12,
+      w: big ? 1024 : 512,
+      h: big ? 430 : 236,
     })
     const board = new Mesh(
-      new PlaneGeometry(2.3, 1.06),
+      new PlaneGeometry(panelW, panelH),
       new MeshStandardMaterial({
         map: tex,
         // dawn shade swallowed the paint — let the board carry its own light
@@ -52,19 +62,27 @@ function getSignsGroup(): Group {
         roughness: 0.88,
       }),
     )
-    board.position.set(pos.x, y + 1.72, pos.z)
+    board.position.set(pos.x, y + panelY, pos.z)
     board.rotation.y = yaw
-    board.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.025 // hand-hung, never straight
-    const back = new Mesh(new PlaneGeometry(2.4, 1.16), BACK_MAT)
+    board.rotation.z = (i % 2 === 0 ? 1 : -1) * (big ? 0.012 : 0.025) // hand-hung
+    board.castShadow = big
+    const back = new Mesh(new PlaneGeometry(panelW + 0.1, panelH + 0.1), BACK_MAT)
     back.position.copy(board.position)
     back.rotation.copy(board.rotation)
-    back.translateZ(-0.02)
+    back.translateZ(-0.03)
 
-    // twin posts under the board's ends (plane local X is horizontal)
-    for (const off of [-0.92, 0.92]) {
+    // twin posts BEHIND the panel (plane local X is horizontal), their tops
+    // tucked under the board's upper edge
+    const postTop = y + panelY + panelH * 0.28
+    for (const off of [-panelW * 0.38, panelW * 0.38]) {
       const post = new Mesh(POST_GEO, POST_MAT)
-      post.position.set(pos.x + Math.cos(yaw) * off, y + 0.85, pos.z - Math.sin(yaw) * off)
-      post.scale.y = 1.7
+      const h = postTop - y
+      post.position.set(
+        pos.x + Math.cos(yaw) * off - fx * 0.12,
+        y + h / 2,
+        pos.z - Math.sin(yaw) * off - fz * 0.12,
+      )
+      post.scale.set(big ? 1.6 : 1, h, big ? 1.6 : 1)
       post.castShadow = true
       group.add(post)
     }

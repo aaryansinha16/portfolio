@@ -279,11 +279,18 @@ export function getCityStatics(): Group {
      half-extent — max(w,d)/2 left boards floating off the narrow faces. */
   {
     const usable = towers.filter((t) => t.h > 17)
+    const gantryMs = [road.zoneMeters * 0.24, road.zoneMeters * 0.58]
     CITY_BILLBOARDS.forEach((bb, i) => {
-      const targetM = 28 + (i * (road.zoneMeters - TUNNEL_LEN - 70)) / (CITY_BILLBOARDS.length - 1)
+      let targetM = 28 + (i * (road.zoneMeters - TUNNEL_LEN - 70)) / (CITY_BILLBOARDS.length - 1)
+      // keep clear of the gantries — stacked signs hide each other (owner:
+      // Masai vs THE CLIMB, Paisaeasy vs 7 ROLES)
+      for (const g of gantryMs) {
+        if (Math.abs(targetM - g) < 34) targetM = g + (targetM >= g ? 34 : -34)
+      }
       // nearest usable tower to the target position
       let best: (typeof usable)[number] | null = null
       let bestD = Infinity
+      const sT = road.at(targetM)
       road.place(targetM, 0, pos)
       const rx = pos.x
       const rz = pos.z
@@ -295,9 +302,12 @@ export function getCityStatics(): Group {
         }
       }
       if (!best) return
-      const toRoadX = rx - best.x
-      const toRoadZ = rz - best.z
-      // candidate faces carry their own normal AND half-extent
+      const toRoadLen = Math.hypot(rx - best.x, rz - best.z) || 1
+      const toRoadX = (rx - best.x) / toRoadLen
+      const toRoadZ = (rz - best.z) / toRoadLen
+      // candidate faces carry their own normal AND half-extent. Score blends
+      // "faces the road" with "faces the APPROACHING driver" — pure toRoad
+      // hung the last boards on side walls you only saw when already past.
       const candidates: Array<[number, number]> = [
         [best.yaw, best.d / 2],
         [best.yaw + Math.PI, best.d / 2],
@@ -306,11 +316,13 @@ export function getCityStatics(): Group {
       ]
       let faceYaw = candidates[0][0]
       let halfDepth = candidates[0][1]
-      let bestDot = -Infinity
+      let bestScore = -Infinity
       for (const [cy, half] of candidates) {
-        const dot = Math.sin(cy) * toRoadX + Math.cos(cy) * toRoadZ
-        if (dot > bestDot) {
-          bestDot = dot
+        const nxC = Math.sin(cy)
+        const nzC = Math.cos(cy)
+        const score = nxC * toRoadX + nzC * toRoadZ + 0.9 * (nxC * -sT.tx + nzC * -sT.tz)
+        if (score > bestScore) {
+          bestScore = score
           faceYaw = cy
           halfDepth = half
         }

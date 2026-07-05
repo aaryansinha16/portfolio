@@ -11,6 +11,8 @@ import {
 import { getZoneRoad } from '../../world/roadSamples'
 import { buildTowerMesh, buildWindowMesh, genTowers } from '../../world/towers'
 import { makeTextPanel } from '../../world/textPanel'
+import { CHAPTER_MARKS, totalLength } from '../../spline/roadPath'
+import { DETOUR_WINDOWS } from '../../detours/DetourManager'
 import { createRng, rngRange } from '../../../utils/random'
 import { AI_PROJECTS } from '../../../content'
 
@@ -54,7 +56,12 @@ export function getNeonStatics(): Group {
   const group = new Group()
   const pos = new Vector3()
 
-  /* dark towers, sparse cool windows */
+  /* dark towers, sparse cool windows — but NOT through the showroom: the
+     clickable project boards live at ~13.5m lateral along the slow-motion
+     stretch, and towers there swallowed them half-deep */
+  const showroom = DETOUR_WINDOWS.find((w) => w.def.id === 'ai-flagships')
+  const showStart = showroom ? (showroom.spline - CHAPTER_MARKS[ZONE]) * totalLength : 0
+  const showEnd = showroom ? showStart + showroom.span * totalLength : 0
   const towers = genTowers({
     zone: ZONE,
     seed: SEED,
@@ -66,6 +73,21 @@ export function getNeonStatics(): Group {
     hMin: 14,
     hMax: 44,
     density: 0.9,
+  }).filter((t) => {
+    if (!showroom) return true
+    // project the tower onto the road to get (meters-along, lateral)
+    let bestD2 = Infinity
+    let bestS = road.samples[0]
+    for (const s of road.samples) {
+      const d2 = (t.x - s.x) ** 2 + (t.z - s.z) ** 2
+      if (d2 < bestD2) {
+        bestD2 = d2
+        bestS = s
+      }
+    }
+    if (bestS.meters < showStart - 8 || bestS.meters > showEnd + 8) return true
+    const lateral = (t.x - bestS.x) * bestS.rx + (t.z - bestS.z) * bestS.rz
+    return Math.abs(lateral) - Math.max(t.w, t.d) / 2 > 19
   })
   group.add(buildTowerMesh(towers, ['#1a2140', '#212a4e', '#161c38'], 0.7))
   group.add(
@@ -141,56 +163,23 @@ export function getNeonStatics(): Group {
     group.add(mesh)
   }
 
-  /* the four AI-project neon signs */
+  /* street steam anchors (the AI-project names themselves live on the
+     showroom's CLICKABLE boards — ambient duplicates of the same four
+     names read as a rendering bug) */
   const steamAnchors: Vector3[] = []
   AI_PROJECTS.forEach((project, i) => {
-    const m = road.zoneMeters * (0.16 + i * 0.22)
-    const side = i % 2 === 0 ? -1 : 1
-    const s = road.at(m)
-    road.place(m, 11.5 * side, pos)
-    // face BACK down the road toward the approaching camera (single-sided
-    // plane!), angled slightly toward the road center
-    const yaw = Math.atan2(s.tx, s.tz) + Math.PI + side * 0.15
-
-    const tex = makeTextPanel({
-      title: project.name,
-      bg: '#070914',
-      fg: project.color,
-      glow: true,
-      w: 768,
-      h: 224,
-    })
-    const sign = new Mesh(
-      new PlaneGeometry(7.4, 2.2),
-      new MeshStandardMaterial({
-        color: '#000000',
-        emissive: '#ffffff',
-        emissiveMap: tex,
-        map: tex,
-        emissiveIntensity: 1.9,
-        roughness: 0.6,
-        toneMapped: false,
-      }),
-    )
-    sign.position.set(pos.x, pos.y + rngRange(rng, 8, 12), pos.z)
-    sign.rotation.y = yaw
-    const back = new Mesh(BOX, new MeshStandardMaterial({ color: '#0a0d1a', roughness: 0.9 }))
-    back.position.copy(sign.position)
-    back.rotation.y = yaw
-    back.scale.set(7.7, 2.5, 0.18)
-    back.translateZ(-0.12)
-    group.add(back, sign)
-
+    void project
     if (i % 2 === 0) {
-      road.place(m + 8, 7.5 * side, pos)
+      const m = road.zoneMeters * (0.16 + i * 0.22)
+      road.place(m + 8, 7.5 * (i % 4 === 0 ? -1 : 1), pos)
       steamAnchors.push(new Vector3(pos.x, pos.y + 1.2, pos.z))
     }
   })
 
-  /* the detour signpost — a small cyan neon marker where the rider pulls
-     over for the AI-flagship strip (window anchors at 0.55 of the zone) */
+  /* the detour signpost — a small cyan neon marker just before the
+     showroom's slow-motion stretch begins (window anchors at 0.4) */
   {
-    const m = road.zoneMeters * 0.53
+    const m = road.zoneMeters * 0.37
     const sD = road.at(m)
     road.place(m, 7.2, pos)
     const yaw = Math.atan2(sD.tx, sD.tz) + Math.PI - 0.15

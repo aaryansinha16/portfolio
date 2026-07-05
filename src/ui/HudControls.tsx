@@ -19,7 +19,6 @@ export function HudControls() {
     const saved = localStorage.getItem('rt-quality') as QualityMode | null
     if (saved && MODES.includes(saved)) useJourney.getState().setQualityMode(saved)
     if (localStorage.getItem('rt-sound') !== 'off') roadAudio.armOnGesture()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const toggleSound = () => {

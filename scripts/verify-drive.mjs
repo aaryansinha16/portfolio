@@ -73,10 +73,20 @@ detours.forEach((d, i) => {
 })
 allStops.sort((a, b) => a[1] - b[1])
 
-// a zero-delta wheel "nudge" cancels the ch6 autopilot without moving lenis —
-// probes must own the scroll position, not fight the self-driving finale
+// The ch6 autopilot engages after 0.8s of input silence — probes must keep
+// "touching the wheel" or screenshots near the finale drift mid-capture.
+// A page-side interval fires zero-delta wheel events (resets the quiet
+// timer, moves nothing); the autopilot probe lifts it via __allowAp.
+const suppressAutopilot = (pg) =>
+  pg.evaluate(() => {
+    window.__allowAp = false
+    window.setInterval(() => {
+      if (!window.__allowAp) window.dispatchEvent(new window.WheelEvent('wheel', { deltaY: 0 }))
+    }, 400)
+  })
+await suppressAutopilot(page)
 const nudge = (pg) =>
-  pg.evaluate(() => window.dispatchEvent(new WheelEvent('wheel', { deltaY: 0 })))
+  pg.evaluate(() => window.dispatchEvent(new window.WheelEvent('wheel', { deltaY: 0 })))
 
 for (const [name, frac] of allStops) {
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * frac))
@@ -91,25 +101,51 @@ for (const [name, frac] of allStops) {
   console.log(`${name}: eyebrow="${eyebrow}"`)
 }
 
-// ---- autopilot probe: enter ch6 fresh and confirm the ride drives itself
+// ---- autopilot probe: enter ch6 fresh, then simulate a trackpad MOMENTUM
+// TAIL (the thing that silently killed v1) and confirm the ride still
+// starts driving itself once the input goes quiet
 await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * 0.79))
-await nudge(page)
 await page.waitForTimeout(1800)
+await page.evaluate(() => {
+  window.__allowAp = true
+})
 await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * 0.845))
-await page.waitForTimeout(1600) // arm delay + ramp-in
+await page.evaluate(
+  () =>
+    new Promise((resolve) => {
+      let i = 0
+      const timer = window.setInterval(() => {
+        window.dispatchEvent(new window.WheelEvent('wheel', { deltaY: 40 * Math.exp(-i / 3) }))
+        if (++i >= 12) {
+          window.clearInterval(timer)
+          resolve(null)
+        }
+      }, 100)
+    }),
+)
+await page.waitForTimeout(1600) // quiet period + ramp-in
 const apA = await page.evaluate(() => window.scrollY)
 await page.waitForTimeout(3500)
 const apB = await page.evaluate(() => window.scrollY)
 console.log(
-  `autopilot: scroll ${Math.round(apA)} → ${Math.round(apB)} ${apB - apA > 120 ? '(self-driving ✓)' : '(NOT MOVING ✗)'}`,
+  `autopilot (post-momentum-tail): scroll ${Math.round(apA)} → ${Math.round(apB)} ${apB - apA > 120 ? '(self-driving ✓)' : '(NOT MOVING ✗)'}`,
 )
 const apOk = apB - apA > 120
-await nudge(page)
+await page.evaluate(() => {
+  window.__allowAp = false
+})
 
-// FPS is measured on a SEPARATE Retina-like page (deviceScaleFactor 2 +
-// 2x CPU throttle). Measuring at dsf 1 hid a real ~35fps regression once —
-// screenshots stay dsf 1 above so review stays fast.
-const perfPage = await browser.newPage({
+// FPS is measured in a FRESH BROWSER (deviceScaleFactor 2 + 2x CPU
+// throttle). Sharing the screenshot marathon's browser polluted the gate:
+// its GPU process reads ~10fps low for a while after heavy capture work,
+// failing runs whose isolated re-probe was a clean 60.
+await new Promise((r) => setTimeout(r, 4000))
+const perfBrowser = await chromium.launch({
+  channel: 'chrome',
+  headless: true,
+  args: ['--hide-scrollbars', '--force-color-profile=srgb'],
+})
+const perfPage = await perfBrowser.newPage({
   viewport: { width: 1440, height: 810 },
   deviceScaleFactor: 2,
 })
@@ -150,7 +186,7 @@ for (const [name, spline] of [
   minFps = Math.min(minFps, r.fps)
   console.log(`fps@${name} (dpr2, cpu2x): ${r.fps.toFixed(1)}, worst frame ${r.worst.toFixed(0)}ms`)
 }
-await perfPage.close()
+await perfBrowser.close()
 
 // ---- memory / leak probe: two full journey roundtrips, then compare
 // renderer-tracked resources against the settled baseline (?debug exposes gl)
@@ -158,6 +194,7 @@ const memPage = await browser.newPage({ viewport: { width: 1280, height: 720 } }
 await memPage.goto(`${TARGET}?debug`, { waitUntil: 'domcontentloaded' })
 await memPage.waitForSelector('canvas', { timeout: 15000 })
 await memPage.waitForTimeout(2500)
+await suppressAutopilot(memPage)
 const memScroll = await memPage.evaluate(
   () => document.documentElement.scrollHeight - window.innerHeight,
 )

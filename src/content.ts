@@ -95,14 +95,28 @@ export const SKILL_BOARDS: readonly { title: string; sub: string; accent: string
 /** The banner the little plane tows over the highway. */
 export const PLANE_BANNER = '5+ YRS · 12+ APPS · AI-NATIVE — AARYAN SINHA'
 
-/** Village learning signboards — the self-taught beginnings, hand-painted. */
-export const VILLAGE_SIGNS: readonly string[] = [
-  '<html>',
-  'hello, world',
-  'css { }',
-  'view-source',
-  'first website →',
-  'console.log("!")',
+/** Village signboards — the self-taught beginnings, hand-painted. `big`
+ * ones are small rural hoardings with a real journey line; the rest stay
+ * quirky roadside markers. */
+export const VILLAGE_SIGNS: readonly { text: string; sub?: string; big?: boolean }[] = [
+  {
+    text: 'IT ALL STARTED WITH NO-CODE GIGS',
+    sub: 'tiny builds for real people — 2018',
+    big: true,
+  },
+  { text: 'hello, world' },
+  {
+    text: 'SELF-TAUGHT: HTML → CSS → JS',
+    sub: 'view-source was my first teacher',
+    big: true,
+  },
+  { text: 'css till 3am { }' },
+  {
+    text: 'FIRST FREELANCE ₹ BEFORE ANY JOB TITLE',
+    sub: 'low-code sites → custom code',
+    big: true,
+  },
+  { text: 'console.log("dreams")' },
 ]
 
 /** Town wall graffiti — attention to detail, not wallpaper. */
@@ -163,6 +177,17 @@ export const CITY_GANTRIES: readonly { title: string; sub: string; color: string
     color: '#ffd9a0',
   },
   { title: '7 ROLES · 1 ROAD', sub: 'every billboard on this skyline is real', color: '#7de8ff' },
+]
+
+/** Town rooftop hoardings — what the learning years were actually made of.
+ * Mounted on houses with decent gaps; the street tells the freelance story. */
+export const TOWN_ROOF_BOARDS: readonly { title: string; sub: string; bg: string }[] = [
+  { title: 'WORDPRESS → CUSTOM CODE', sub: 'when templates stopped being enough', bg: '#274e63' },
+  { title: 'FIRST REACT APP — 2019', sub: 'rebuilt a client site, never went back', bg: '#7a3327' },
+  { title: '12+ FREELANCE BUILDS', sub: 'clients across 4 countries', bg: '#4e5a2e' },
+  { title: 'REAL-TIME CHAT FOR A CLIENT', sub: 'socket.io before it was my job', bg: '#31456b' },
+  { title: 'PAYMENTS THAT CLEAR', sub: 'razorpay · stripe · mollie', bg: '#6b3f27' },
+  { title: 'SHOPIFY STOREFRONTS', sub: 'graphql APIs, live to this day', bg: '#623253' },
 ]
 
 /** Town shopfront signboards — the learning-years street. */
@@ -272,9 +297,9 @@ export const DETOURS: readonly DetourDef[] = [
     style: 'holo',
     mode: 'world',
     zone: 5,
-    anchorT: 0.52,
-    scrollLen: 0.075,
-    spanMeters: 96,
+    anchorT: 0.4,
+    scrollLen: 0.085,
+    spanMeters: 190,
     panels: [
       {
         kind: 'intro',
