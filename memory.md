@@ -60,6 +60,14 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (l)** — ROUND 7. When a procedural mount keeps failing an aesthetic bar
+  after two geometric-test hardenings, STOP hardening and switch mount types: content-level
+  `freestanding: true` puts a board on roadside poles at its exact station — guaranteed
+  visibility, keeps the rhythm, one line to apply to any future problem board. Fallback
+  chains must never drop constraints silently (`?? cands[0]` re-broke separation AND
+  occlusion in one expression). Glance economics: stretch 3.6 ≈ 18% of cruise; every
+  deepening pairs with a SCROLL_PAGES bump (18→20→22) to hold cruise pacing constant.
+
 - **2026-07-05 (k)** — ROUND 6. THE AUDIO BUG: 'wheel' is NOT a user-activation gesture —
   an AudioContext created/resumed in a wheel handler stays suspended ("not allowed to
   start") and if the arming listener is one-shot, sound is silent FOREVER on deploy while

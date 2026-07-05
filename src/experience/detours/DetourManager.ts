@@ -43,17 +43,18 @@ interface RemapWindow {
   def?: DetourDef
 }
 
-/* glance windows. Two lessons from the owner's tests baked in here:
- * (1) the slow-down must LAST — the old 24m window at stretch 2.0 crossed
- *     in ~55px of scroll, gone before perception. 26m at stretch 2.6 holds
- *     ~2% of the scroll runway at ~38% of cruise speed.
+/* glance windows. Lessons from the owner's tests baked in here:
+ * (1) the slow-down must LAST — a window that crosses in ~55px of scroll
+ *     is gone before perception. 22m at stretch 3.6 holds ~400px of the
+ *     runway at ~18% of cruise speed: an unmistakable cinematic beat.
  * (2) the window is phased in CAMERA coordinates to sit under the tilt's
  *     hold (the vehicle rides ~9m ahead of the camera's spline coordinate,
  *     and the look envelope keys off the VEHICLE).
- * SCROLL_PAGES went 18 → 20 alongside so cruise pacing stays unchanged. */
-const GLANCE_BACK = 27
-const GLANCE_LEN = 26
-const GLANCE_STRETCH = 2.6
+ * SCROLL_PAGES rises alongside every stretch (18→20→22) so cruise pacing
+ * between the boards stays exactly where it was. */
+const GLANCE_BACK = 25
+const GLANCE_LEN = 22
+const GLANCE_STRETCH = 3.6
 
 const ALL_WINDOWS: readonly RemapWindow[] = (() => {
   const entries: RemapWindow[] = []

@@ -151,6 +151,19 @@ great, zero console errors.
 
 ---
 
+## Polish round 7 — deeper slow-mo, Masai freestanding, station rhythm (2026-07-05) — ALL DONE
+
+- [x] 1: glance slow-mo deepened to ~18% of cruise (stretch 3.6, 22m windows ≈ 400px of
+      scroll each); SCROLL_PAGES 20 → 22 keeps cruise pacing identical
+- [x] 2: Masai School is a FREESTANDING roadside billboard now (content flag) — its
+      stretch of the street is dense and tower mounts kept reading cramped at glance
+      angles; roadside mounts are guaranteed unoccluded. Sight test also hardened:
+      rays from the board's edges, not just its center
+- [x] 3: board spacing restored — the `?? cands[0]` fallback was silently dropping BOTH
+      the separation and sight rules; now strict tower picks only, with the freestanding
+      roadside mount as the guaranteed fallback exactly AT the station (45.8m rhythm)
+- [x] 4: autopilot +40% again — rest of ch6 in ~2s
+
 ## Polish round 6 — perceivable slow-mo, road-side mounts, LIVE AUDIO (2026-07-05) — ALL DONE
 
 - [x] 1: Masai/Brainerhub kept on ROAD-SIDE first-row walls — candidates sort by

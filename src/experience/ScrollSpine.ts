@@ -15,9 +15,9 @@ import { PREFERS_REDUCED_MOTION, START_CHAPTER } from '../utils/query'
  */
 
 /** Page height in viewports. Tune for pacing: higher = slower, calmer drive.
- * (Raised 18 → 20 with the deeper glance windows so cruise pacing between
- * boards stays where it was.) */
-export const SCROLL_PAGES = 20
+ * (Rises with every glance-window deepening — 18→20→22 — so cruise pacing
+ * between boards stays where it was.) */
+export const SCROLL_PAGES = 22
 /** Scrub smoothing — the ONLY camera smoothing in the app (see CLAUDE.md burns). */
 export const SCRUB = 0.8
 
@@ -115,13 +115,13 @@ export function initScrollSpine(): () => void {
         } else {
           apState = 'driving'
           apRamp = 0
-          // flat out (owner, three times now) — the rest of ch6 in ~3s
-          apSpeed = Math.max(260, (lenis.limit - lenis.scroll) / 2.8)
+          // flat out (owner, four times now) — the rest of ch6 in ~2s
+          apSpeed = Math.max(320, (lenis.limit - lenis.scroll) / 2)
         }
       }
     } else if (apState === 'driving') {
       apRamp += dt
-      const ease = Math.min(1, apRamp / 1.0) // quick pull-away
+      const ease = Math.min(1, apRamp / 0.8) // quick pull-away
       const next = Math.min(lenis.scroll + apSpeed * ease * dt, lenis.limit)
       lenis.scrollTo(next, { immediate: true })
       if (next >= lenis.limit - 1) apState = 'done'
