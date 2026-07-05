@@ -86,6 +86,8 @@ detours.forEach((d, i) => {
   allStops.push([`d${i + 1}-detour-early`, d.start + d.len * 0.3])
   allStops.push([`d${i + 1}-detour-late`, d.start + d.len * 0.75])
 })
+// the flight epilogue occupies the scroll tail past spline 1
+allStops.push(['09-flight-mid', 0.978], ['10-flight-end', 1.0])
 allStops.sort((a, b) => a[1] - b[1])
 
 // The ch6 autopilot engages after 0.8s of input silence — probes must keep

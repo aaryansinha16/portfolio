@@ -289,6 +289,28 @@ class RoadAudio {
     this.raf = requestAnimationFrame(tick)
   }
 
+  /** A tiny robotic tick for UI reveals (flight-plan blocks). */
+  uiClick() {
+    const ctx = this.ctx
+    if (!ctx || ctx.state !== 'running' || !this.master || !this.enabled) return
+    const t = ctx.currentTime
+    const osc = ctx.createOscillator()
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(1480, t)
+    osc.frequency.exponentialRampToValueAtTime(720, t + 0.04)
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0.055, t)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06)
+    const f = ctx.createBiquadFilter()
+    f.type = 'bandpass'
+    f.frequency.value = 1200
+    osc.connect(f)
+    f.connect(g)
+    g.connect(this.master)
+    osc.start(t)
+    osc.stop(t + 0.08)
+  }
+
   disable() {
     this.disarm?.()
     this.enabled = false

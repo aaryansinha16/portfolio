@@ -60,6 +60,15 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-06 (b)** — ROUND 12: flight epilogue. Pattern for post-spline story: a
+  TERMINAL PLATEAU window (spline=1, span=0) in the one master remap + flightOf(scroll)
+  → every system (plane m, camera chase, env blend, DOM blocks) keys off the same 0..1.
+  Camera chase-past-the-road: lerp from road rig to path(planeM-12)+2.6 by
+  smoothstep((over-10)/7) — reuses the same extrapolation for pos+look so framing never
+  pops. Env re-grade at frame level: blend frameEnv AFTER sampleEnv (single interception
+  point — Sky/fog/sun/exposure all follow). uiClick() synthesized on the shared master
+  gain → respects mute for free. All scroll-pure: the entire ending rewinds.
+
 - **2026-07-06 (a)** — ROUND 11. Ch4 boards: after 4 rounds of tower-mount fixes, the
   structural answer was NO tower mounts — freestanding at stations + clearing tower
   corridors AT GENERATION time (filter in genTowers result). When a placement system

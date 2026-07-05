@@ -4,6 +4,7 @@ import { PerspectiveCamera, Vector3 } from 'three'
 import {
   CLIFF_MAX_OVER,
   CLIFF_START_M,
+  FLIGHT_EXTRA_M,
   metersToProgress,
   pointAt,
   pointPastEnd,
@@ -12,8 +13,9 @@ import {
 } from './spline/roadPath'
 import { useJourney } from '../state/useJourney'
 import { sampleCamera, vehicleProgressAt, type RuntimeCam } from './atmosphere/ColorScript'
+import { flightOf } from './detours/DetourManager'
 import { focusLookAt } from './world/focusTargets'
-import { clamp, clamp01, damp } from '../utils/math'
+import { clamp, clamp01, damp, smoothstep } from '../utils/math'
 import { createScratch } from '../utils/scratch'
 
 /**
@@ -39,6 +41,7 @@ const CAM = {
 const scratch = createScratch()
 const camFrame: RuntimeCam = { height: 2.1, right: 1.2, fov: 45, chase: 8.5 }
 const focusPos = new Vector3()
+const flightCamPos = new Vector3()
 /** how far the gaze commits to a story board (1 = stare straight at it) */
 const FOCUS_MIX = 0.92
 
@@ -69,13 +72,16 @@ export function CameraRig() {
     const { v1: camPos, v2: look, v3: right, v4: tangent, v5: tangentAhead } = scratch
     sampleCamera(p, camFrame)
 
-    // The dive: how far the ride is past the cliff edge (0 before it).
-    // The camera holds its spot on the deck but RISES with the fall —
-    // from chase height the lip itself would hide anything below the edge.
-    const overVehicle = clamp01(
-      (vehicleProgressAt(state.splineProgress) * totalLength - CLIFF_START_M) / CLIFF_MAX_OVER,
-    )
-    const dive = overVehicle * overVehicle * (3 - 2 * overVehicle) // smoothstep
+    // The dive + the flight. planeM is where the ride actually is: the
+    // scroll-driven overshoot past the cliff plus the epilogue's extra run.
+    const planeM =
+      Math.min(
+        vehicleProgressAt(state.splineProgress) * totalLength,
+        CLIFF_START_M + CLIFF_MAX_OVER,
+      ) +
+      flightOf(state.progress) * FLIGHT_EXTRA_M
+    const overPlane = planeM - CLIFF_START_M
+    const dive = smoothstep(clamp01(overPlane / CLIFF_MAX_OVER))
 
     // Position: on the spline at p, lifted and offset slightly right.
     pointAt(p, camPos)
@@ -83,6 +89,15 @@ export function CameraRig() {
     right.set(-tangent.z, 0, tangent.x).normalize()
     camPos.y += camFrame.height + dive * 6.5
     camPos.addScaledVector(right, camFrame.right)
+    // …then the camera LEAVES the road and chases the plane up the climb,
+    // riding the same swoop 12m behind (owner: the view flies with it).
+    const flightBlend = smoothstep(clamp01((overPlane - 10) / 7))
+    if (flightBlend > 0) {
+      pointPastEnd(planeM - 12, flightCamPos)
+      flightCamPos.y += 2.6
+      flightCamPos.addScaledVector(right, 1.1)
+      camPos.lerp(flightCamPos, flightBlend)
+    }
 
     // Subtle speed shake (never at rest, never in reduced motion).
     if (!state.reducedMotion) {
@@ -94,15 +109,14 @@ export function CameraRig() {
 
     camera.position.copy(camPos)
 
-    // Look-at leads the vehicle so turns feel anticipated. Near the cliff
-    // the target follows the SAME dive extrapolation the vehicle rides, so
-    // the camera tilts down and watches the fall (capped just past the
-    // vehicle's own hang point to keep it framed).
+    // Look-at leads the vehicle so turns feel anticipated. Past the cliff
+    // the target rides the SAME dive-and-climb the plane flies, so the
+    // camera watches the fall and then the climb-out.
     const pVehicle = vehicleProgressAt(p)
-    const lookM = Math.min(
-      pVehicle * totalLength + CAM.lookAheadMeters,
-      CLIFF_START_M + CLIFF_MAX_OVER + 2,
-    )
+    const lookM =
+      overPlane > 0
+        ? planeM + 4
+        : Math.min(pVehicle * totalLength + CAM.lookAheadMeters, CLIFF_START_M + 2)
     pointPastEnd(lookM, look)
     look.y += CAM.lookHeight
     // The glance: passing a story board (ch2 rooftops, ch4 career signs)

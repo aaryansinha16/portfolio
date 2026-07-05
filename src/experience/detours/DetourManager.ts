@@ -56,6 +56,10 @@ const GLANCE_BACK = 25
 const GLANCE_LEN = 22
 const GLANCE_STRETCH = 4.4
 
+/* the epilogue: a terminal plateau — spline holds at 1 while the surplus
+ * scroll flies the plane on into the bright morning (FLIGHT_EXTRA_M) */
+const FLIGHT_SCROLL_LEN = 0.055
+
 const ALL_WINDOWS: readonly RemapWindow[] = (() => {
   const entries: RemapWindow[] = []
   for (const def of DETOURS) {
@@ -78,6 +82,7 @@ const ALL_WINDOWS: readonly RemapWindow[] = (() => {
       scrollStart: 0,
     })
   }
+  entries.push({ spline: 1, span: 0, scrollLen: FLIGHT_SCROLL_LEN, scrollStart: 0 })
   entries.sort((a, b) => a.spline - b.spline)
 
   const totalPause = entries.reduce((sum, w) => sum + w.scrollLen, 0)
@@ -143,4 +148,13 @@ export function detourAt(scroll: number): { window: DetourWindow; t: number } | 
     if (t >= 0 && t <= 1) return { window: w, t }
   }
   return null
+}
+
+/* the terminal plateau, resolved once */
+const FLIGHT_WINDOW = ALL_WINDOWS[ALL_WINDOWS.length - 1]
+
+/** Epilogue progress: 0 until the spline is spent, 0..1 across the flight. */
+export function flightOf(scroll: number): number {
+  const t = (scroll - FLIGHT_WINDOW.scrollStart) / FLIGHT_WINDOW.scrollLen
+  return t <= 0 ? 0 : t >= 1 ? 1 : t
 }

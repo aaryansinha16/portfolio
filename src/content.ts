@@ -205,6 +205,22 @@ export const TOWN_SHOPS: readonly { name: string; bg: string }[] = [
 
 export const DETOUR_SIGN = { title: 'PROJECTS →', sub: '12+ builds, this way' } as const
 
+/** The flight epilogue — future plans, typed out as the plane climbs. */
+export const FUTURE_PLANS: readonly { tag: string; text: string }[] = [
+  {
+    tag: 'NEXT',
+    text: 'Ship AI-native products end to end — agents that act, not demos.',
+  },
+  {
+    tag: 'GOAL',
+    text: 'Build and lead teams that turn LLMs into dependable production systems.',
+  },
+  {
+    tag: 'ALWAYS',
+    text: 'Keep learning at highway speed. The road never really ends.',
+  },
+]
+
 /** Neon Night — the AI-era flagships, in actual neon. */
 export const AI_PROJECTS: readonly { name: string; color: string }[] = [
   { name: 'AI-TRADER', color: '#00e5ff' },

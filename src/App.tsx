@@ -3,6 +3,7 @@ import { Experience } from './experience/Experience'
 import { initScrollSpine, SCROLL_PAGES } from './experience/ScrollSpine'
 import { ContactTerminal } from './ui/ContactTerminal'
 import { DetourOverlay } from './ui/DetourOverlay'
+import { FlightPlans } from './ui/FlightPlans'
 import { HudControls } from './ui/HudControls'
 import { Loader } from './ui/Loader'
 import { Overlay } from './ui/Overlay'
@@ -26,6 +27,7 @@ function DrivenJourney() {
       <Overlay />
       <DetourOverlay />
       <ContactTerminal />
+      <FlightPlans />
       <HudControls />
       <SoundPrompt />
       <Loader />

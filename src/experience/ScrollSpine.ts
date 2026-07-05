@@ -15,9 +15,9 @@ import { PREFERS_REDUCED_MOTION, START_CHAPTER } from '../utils/query'
  */
 
 /** Page height in viewports. Tune for pacing: higher = slower, calmer drive.
- * (Rises with every glance-window deepening — 18→20→22→25 — so cruise
- * pacing between boards stays where it was.) */
-export const SCROLL_PAGES = 25
+ * (Rises with every added segment — glances took 18→25, the flight
+ * epilogue takes 25→27 — so cruise pacing stays where it was.) */
+export const SCROLL_PAGES = 27
 /** Scrub smoothing — the ONLY camera smoothing in the app (see CLAUDE.md burns). */
 export const SCRUB = 0.8
 

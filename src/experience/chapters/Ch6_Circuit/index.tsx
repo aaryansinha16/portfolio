@@ -13,6 +13,7 @@ import {
   pulseFrontAt,
   traceMaterial,
 } from './circuitField'
+import { FlightSky } from './FlightSky'
 
 const dummy = new Object3D()
 
@@ -95,6 +96,7 @@ export default function Ch6_Circuit() {
       <primitive object={statics} dispose={null} />
       <CircuitPulse />
       <StatusLeds />
+      <FlightSky />
     </group>
   )
 }

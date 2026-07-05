@@ -160,8 +160,11 @@ export function tangentAt(p: number, target: Vector3): Vector3 {
 export const CLIFF_START_M = totalLength - 10
 /** meters past the edge where the ride hands over to the plane */
 export const FLIGHT_SWAP_OVER = 7
-/** how far past the edge the flight is allowed before it holds */
+/** the scroll-driven ride reaches this overshoot at splineProgress = 1 … */
 export const CLIFF_MAX_OVER = 20
+/** … and the FLIGHT segment (terminal scroll plateau) adds this much more —
+ * the epilogue: the plane climbs on into the bright morning */
+export const FLIGHT_EXTRA_M = 90
 
 const _edgePoint = new Vector3()
 const _edgeDir = new Vector3()
@@ -169,18 +172,22 @@ roadCurve.getPointAt(CLIFF_START_M / totalLength, _edgePoint)
 roadCurve.getTangentAt(CLIFF_START_M / totalLength, _edgeDir)
 
 /** Like pointAt (in METERS), but continues past the cliff edge into the
- * dive-and-climb. C1 at the seam (o = 6): dive slope 0.72 continues into
- * the pull-out, levels ~o 11, and climbs back above the lip by o ≈ 18.
- * No cap here — callers clamp their own travel. */
+ * dive-pull-out-climb. C1 at every seam: dive to o = 6 (slope 0.72 down),
+ * pull-out quadratic to o = 20 (crosses the lip line ~o 18), then a long
+ * climb whose slope eases 1.24 → 0.55 across the epilogue. No cap here —
+ * callers clamp their own travel. */
 export function pointPastEnd(m: number, target: Vector3): Vector3 {
   if (m <= CLIFF_START_M) return pointAt(m / totalLength, target)
   const over = m - CLIFF_START_M
   target.copy(_edgePoint).addScaledVector(_edgeDir, over)
   if (over <= 6) {
     target.y -= 0.06 * over * over
-  } else {
+  } else if (over <= 20) {
     const q = over - 6
     target.y -= 2.16 + 0.72 * q - 0.07 * q * q
+  } else {
+    const r = over - 20
+    target.y += 1.48 + 1.24 * r - 0.004 * r * r
   }
   return target
 }

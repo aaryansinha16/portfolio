@@ -151,6 +151,22 @@ great, zero console errors.
 
 ---
 
+## Round 12 — the flight epilogue (2026-07-06) — ALL DONE
+
+- [x] the journey grew a real EPILOGUE: a terminal plateau in the master remap holds
+      spline at 1 while the last ~5.5% of scroll flies the plane 90m further
+      (SCROLL_PAGES 25 → 27); the climb curve extends C1 with an easing slope
+- [x] the CAMERA flies with it — it leaves the road past the lip and rides the same
+      swoop 12m behind the plane, look target leading it
+- [x] the world turns hopeful: frameEnv blends to a bright morning (blue sky, warm
+      sun, soft fog) by flight progress; FlightSky adds drifting clouds and a glowing
+      sun sprite along the climb path
+- [x] FUTURE_PLANS blocks ([01] NEXT_ / [02] GOAL_ / [03] ALWAYS_) stamp in one at a
+      time — mono robotic framing, top-to-bottom clip reveal, a synthesized UI click
+      per block (respects mute); scrubbing back retracts them
+- [x] the get-in-touch terminal stays on screen through the whole flight
+- [x] deployed: Vercel + GitHub Pages
+
 ## Round 11 — clear boards, the sound gate, the flying ending (2026-07-06) — ALL DONE
 
 - [x] Masai/Brainerhub half-inside buildings, ended structurally: ALL seven career

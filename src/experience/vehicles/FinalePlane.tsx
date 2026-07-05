@@ -4,11 +4,13 @@ import { Group, Mesh } from 'three'
 import {
   CLIFF_MAX_OVER,
   CLIFF_START_M,
+  FLIGHT_EXTRA_M,
   FLIGHT_SWAP_OVER,
   pointPastEnd,
   totalLength,
 } from '../spline/roadPath'
 import { vehicleProgressAt } from '../atmosphere/ColorScript'
+import { flightOf } from '../detours/DetourManager'
 import { useJourney } from '../../state/useJourney'
 import { clamp01 } from '../../utils/math'
 import { createScratch } from '../../utils/scratch'
@@ -30,10 +32,14 @@ export function FinalePlane() {
   useFrame(({ clock }) => {
     const group = groupRef.current
     if (!group) return
-    const m = Math.min(
-      vehicleProgressAt(useJourney.getState().splineProgress) * totalLength,
-      CLIFF_START_M + CLIFF_MAX_OVER,
-    )
+    const state = useJourney.getState()
+    // scroll-driven overshoot (≤ CLIFF_MAX_OVER) + the epilogue's extra run
+    const m =
+      Math.min(
+        vehicleProgressAt(state.splineProgress) * totalLength,
+        CLIFF_START_M + CLIFF_MAX_OVER,
+      ) +
+      flightOf(state.progress) * FLIGHT_EXTRA_M
     const over = m - CLIFF_START_M
     const born = clamp01((over - (FLIGHT_SWAP_OVER - 1.4)) / 1.4)
     group.visible = born > 0.01
