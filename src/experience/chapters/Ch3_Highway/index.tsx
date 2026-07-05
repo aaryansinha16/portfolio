@@ -3,6 +3,8 @@ import { FarSilhouettes } from '../GreyboxBiome'
 import { highwayConfig } from './config'
 import { getHighwayBirdAnchors, getHighwayStatics } from './highwayField'
 import { Traffic } from './Traffic'
+import { Windmills } from './Windmills'
+import { BannerPlane } from './BannerPlane'
 import { BirdFlock } from '../../world/BirdFlock'
 
 /**
@@ -17,6 +19,8 @@ export default function Ch3_Highway() {
     <group>
       <primitive object={statics} dispose={null} />
       <Traffic />
+      <Windmills />
+      <BannerPlane />
       <BirdFlock
         anchors={birdAnchors}
         count={6}

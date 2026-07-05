@@ -1,17 +1,100 @@
-import { zoneFloat } from '../experience/atmosphere/ColorScript'
+import { CHAPTER_MARKS } from '../experience/spline/roadPath'
+import { vehicleProgressAt, zoneFloat } from '../experience/atmosphere/ColorScript'
 import { useJourney } from '../state/useJourney'
-import { clamp01 } from '../utils/math'
+import { clamp01, lerp, normRange, smoothstep } from '../utils/math'
 
 /**
- * Synthesized road audio — zero asset downloads (everything in this project
- * is procedural, the sound too). Two layers, both driven by scroll velocity:
- *   engine — detuned saw pair through a lowpass, pitch/gain ride the speed
- *   wind   — looped noise through a lowpass that opens with speed and
- *            darkens at night (the ambience crossfade, in spirit)
- * Plus a starter whirr when the engine wakes. Off by default; the HUD
- * toggle calls enable()/disable(). AudioContext is created lazily on the
- * first user gesture (autoplay policy).
+ * Synthesized road audio — zero asset downloads. Each vehicle has its own
+ * voice, crossfaded exactly where the swap choreography hands over:
+ *   bicycle — NO engine: freewheel ticks (pitched tick-loop buffer) + wind
+ *   motorcycle — small single-cylinder: low saw + slow gain lope
+ *   R15 — sportier: higher base pitch, brighter filter, fast smooth rev
+ *   Safari — heavier: sub-heavy saws, darker filter
+ * The wind bed opens with speed and darkens at night. Sound is ON by
+ * default but the context can only start on a user gesture — armOnGesture()
+ * starts it with the first scroll/click/keypress (with the ignition whirr).
  */
+
+interface VehicleVoice {
+  /** engine base pitch at rest + per-m/s slope */
+  pitch: number
+  pitchSlope: number
+  filter: number
+  filterSlope: number
+  gain: number
+  gainSlope: number
+  /** gain-LFO (engine lope): rate Hz + depth 0..1 */
+  lopeRate: number
+  lopeDepth: number
+  /** freewheel tick loudness (bicycle only) */
+  tick: number
+  windMul: number
+}
+
+const VOICES: VehicleVoice[] = [
+  // bicycle
+  {
+    pitch: 0,
+    pitchSlope: 0,
+    filter: 300,
+    filterSlope: 0,
+    gain: 0,
+    gainSlope: 0,
+    lopeRate: 0,
+    lopeDepth: 0,
+    tick: 1,
+    windMul: 1.25,
+  },
+  // motorcycle
+  {
+    pitch: 52,
+    pitchSlope: 0.42,
+    filter: 300,
+    filterSlope: 6,
+    gain: 0.055,
+    gainSlope: 0.0006,
+    lopeRate: 11,
+    lopeDepth: 0.5,
+    tick: 0,
+    windMul: 1,
+  },
+  // r15
+  {
+    pitch: 84,
+    pitchSlope: 0.8,
+    filter: 520,
+    filterSlope: 10,
+    gain: 0.05,
+    gainSlope: 0.0007,
+    lopeRate: 26,
+    lopeDepth: 0.2,
+    tick: 0,
+    windMul: 1,
+  },
+  // safari
+  {
+    pitch: 38,
+    pitchSlope: 0.32,
+    filter: 240,
+    filterSlope: 4.5,
+    gain: 0.07,
+    gainSlope: 0.0006,
+    lopeRate: 8,
+    lopeDepth: 0.14,
+    tick: 0,
+    windMul: 0.9,
+  },
+]
+
+/** blended voice weights for the current spline position (swap-aware) */
+function voiceWeights(spline: number): [number, number, number, number] {
+  const m = vehicleProgressAt(spline)
+  const w = 0.008 // blend half-width, roughly the swap window
+  const t12 = smoothstep(normRange(m, CHAPTER_MARKS[2] - w, CHAPTER_MARKS[2] + w))
+  const t23 = smoothstep(normRange(m, CHAPTER_MARKS[3] - w, CHAPTER_MARKS[3] + w))
+  const t34 = smoothstep(normRange(m, CHAPTER_MARKS[4] - w, CHAPTER_MARKS[4] + w))
+  return [1 - t12, t12 * (1 - t23), t23 * (1 - t34), t34]
+}
 
 class RoadAudio {
   private ctx: AudioContext | null = null
@@ -20,9 +103,14 @@ class RoadAudio {
   private engineFilter: BiquadFilterNode | null = null
   private oscA: OscillatorNode | null = null
   private oscB: OscillatorNode | null = null
+  private lope: OscillatorNode | null = null
+  private lopeAmt: GainNode | null = null
   private windGain: GainNode | null = null
   private windFilter: BiquadFilterNode | null = null
+  private tickGain: GainNode | null = null
+  private tickSrc: AudioBufferSourceNode | null = null
   private raf = 0
+  private disarm: (() => void) | null = null
   enabled = false
 
   private build() {
@@ -34,7 +122,7 @@ class RoadAudio {
     this.master.gain.value = 0
     this.master.connect(ctx.destination)
 
-    // engine: two saws a few cents apart → lowpass → gain
+    // engine: detuned saw pair → lowpass → gain (lope LFO rides the gain)
     this.engineFilter = ctx.createBiquadFilter()
     this.engineFilter.type = 'lowpass'
     this.engineFilter.frequency.value = 320
@@ -42,10 +130,8 @@ class RoadAudio {
     this.engineGain.gain.value = 0
     this.oscA = ctx.createOscillator()
     this.oscA.type = 'sawtooth'
-    this.oscA.frequency.value = 48
     this.oscB = ctx.createOscillator()
     this.oscB.type = 'sawtooth'
-    this.oscB.frequency.value = 48.7
     this.oscA.connect(this.engineFilter)
     this.oscB.connect(this.engineFilter)
     this.engineFilter.connect(this.engineGain)
@@ -53,29 +139,75 @@ class RoadAudio {
     this.oscA.start()
     this.oscB.start()
 
-    // wind/road: 2s noise loop → lowpass → gain
+    this.lope = ctx.createOscillator()
+    this.lope.type = 'sine'
+    this.lope.frequency.value = 11
+    this.lopeAmt = ctx.createGain()
+    this.lopeAmt.gain.value = 0
+    this.lope.connect(this.lopeAmt)
+    this.lopeAmt.connect(this.engineGain.gain)
+    this.lope.start()
+
+    // wind/road: looped noise → lowpass → gain
     const noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
-    const data = noise.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
-    const src = ctx.createBufferSource()
-    src.buffer = noise
-    src.loop = true
+    const nd = noise.getChannelData(0)
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1
+    const windSrc = ctx.createBufferSource()
+    windSrc.buffer = noise
+    windSrc.loop = true
     this.windFilter = ctx.createBiquadFilter()
     this.windFilter.type = 'lowpass'
     this.windFilter.frequency.value = 500
     this.windGain = ctx.createGain()
     this.windGain.gain.value = 0
-    src.connect(this.windFilter)
+    windSrc.connect(this.windFilter)
     this.windFilter.connect(this.windGain)
     this.windGain.connect(this.master)
-    src.start()
+    windSrc.start()
+
+    // bicycle freewheel: a 1s loop of tick clusters, rate rides playbackRate
+    const tickBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
+    const td = tickBuf.getChannelData(0)
+    for (let c = 0; c < 8; c++) {
+      const start = Math.floor((c / 8) * ctx.sampleRate)
+      for (let i = 0; i < 90; i++) {
+        td[start + i] = (Math.random() * 2 - 1) * Math.exp(-i / 18) * 0.8
+      }
+    }
+    this.tickSrc = ctx.createBufferSource()
+    this.tickSrc.buffer = tickBuf
+    this.tickSrc.loop = true
+    const tickFilter = ctx.createBiquadFilter()
+    tickFilter.type = 'highpass'
+    tickFilter.frequency.value = 2400
+    this.tickGain = ctx.createGain()
+    this.tickGain.gain.value = 0
+    this.tickSrc.connect(tickFilter)
+    tickFilter.connect(this.tickGain)
+    this.tickGain.connect(this.master)
+    this.tickSrc.start()
   }
 
   private ignition() {
     const ctx = this.ctx
     if (!ctx || !this.master) return
+    // the bicycle era has no starter motor — a bell ping instead
+    const [wBike] = voiceWeights(useJourney.getState().splineProgress)
     const t = ctx.currentTime
-    // starter whirr: pitch climb + noise chirp, then settle into idle
+    if (wBike > 0.5) {
+      const osc = ctx.createOscillator()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(1720, t)
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(0, t)
+      g.gain.linearRampToValueAtTime(0.07, t + 0.01)
+      g.gain.setTargetAtTime(0, t + 0.05, 0.18)
+      osc.connect(g)
+      g.connect(this.master)
+      osc.start(t)
+      osc.stop(t + 1)
+      return
+    }
     const osc = ctx.createOscillator()
     osc.type = 'square'
     osc.frequency.setValueAtTime(70, t)
@@ -95,7 +227,24 @@ class RoadAudio {
     osc.stop(t + 1.1)
   }
 
+  /** Sound defaults ON: start with the first user gesture (autoplay policy). */
+  armOnGesture() {
+    if (this.enabled || this.disarm) return
+    const start = () => {
+      cleanup()
+      this.enable()
+    }
+    const events: Array<keyof WindowEventMap> = ['pointerdown', 'keydown', 'wheel', 'touchstart']
+    const cleanup = () => {
+      events.forEach((e) => window.removeEventListener(e, start))
+      this.disarm = null
+    }
+    events.forEach((e) => window.addEventListener(e, start, { passive: true }))
+    this.disarm = cleanup
+  }
+
   enable() {
+    this.disarm?.()
     this.build()
     const ctx = this.ctx!
     void ctx.resume()
@@ -111,8 +260,9 @@ class RoadAudio {
   }
 
   disable() {
-    if (!this.ctx || !this.master) return
+    this.disarm?.()
     this.enabled = false
+    if (!this.ctx || !this.master) return
     cancelAnimationFrame(this.raf)
     this.master.gain.setTargetAtTime(0, this.ctx.currentTime, 0.18)
   }
@@ -123,14 +273,41 @@ class RoadAudio {
     const { velocity, splineProgress } = useJourney.getState()
     const speed = Math.min(velocity, 200)
     const night = clamp01(1 - Math.abs(zoneFloat(splineProgress) - 5) * 0.6)
+    const w = voiceWeights(splineProgress)
     const t = ctx.currentTime
 
-    this.oscA!.frequency.setTargetAtTime(46 + speed * 0.5, t, 0.08)
-    this.oscB!.frequency.setTargetAtTime(46.8 + speed * 0.505, t, 0.08)
-    this.engineFilter!.frequency.setTargetAtTime(300 + speed * 7, t, 0.1)
-    this.engineGain!.gain.setTargetAtTime(0.05 + clamp01(speed / 150) * 0.1, t, 0.12)
+    // blend the four voices
+    let pitch = 0
+    let filter = 0
+    let gain = 0
+    let lopeRate = 0
+    let lopeDepth = 0
+    let windMul = 0
+    let tickAmt = 0
+    for (let i = 0; i < 4; i++) {
+      const v = VOICES[i]
+      pitch += w[i] * (v.pitch + v.pitchSlope * speed)
+      filter += w[i] * (v.filter + v.filterSlope * speed)
+      gain += w[i] * (v.gain + v.gainSlope * speed) * lerp(1, 1.6, clamp01(speed / 160))
+      lopeRate += w[i] * (v.lopeRate + speed * 0.12)
+      lopeDepth += w[i] * v.lopeDepth
+      windMul += w[i] * v.windMul
+      tickAmt += w[i] * v.tick
+    }
 
-    this.windGain!.gain.setTargetAtTime(clamp01(speed / 130) * 0.16, t, 0.15)
+    const engineOn = pitch > 4
+    this.oscA!.frequency.setTargetAtTime(Math.max(30, pitch), t, 0.08)
+    this.oscB!.frequency.setTargetAtTime(Math.max(30, pitch) * 1.012, t, 0.08)
+    this.engineFilter!.frequency.setTargetAtTime(Math.max(150, filter), t, 0.1)
+    this.engineGain!.gain.setTargetAtTime(engineOn ? gain : 0, t, 0.12)
+    this.lope!.frequency.setTargetAtTime(Math.max(4, lopeRate), t, 0.1)
+    this.lopeAmt!.gain.setTargetAtTime(engineOn ? gain * lopeDepth : 0, t, 0.12)
+
+    // freewheel ticks: rate + loudness ride the speed, bicycle only
+    this.tickSrc!.playbackRate.setTargetAtTime(0.35 + speed / 22, t, 0.1)
+    this.tickGain!.gain.setTargetAtTime(tickAmt * clamp01(speed / 34) * 0.11, t, 0.1)
+
+    this.windGain!.gain.setTargetAtTime(clamp01(speed / 130) * 0.16 * windMul, t, 0.15)
     this.windFilter!.frequency.setTargetAtTime((450 + speed * 13) * (1 - night * 0.4), t, 0.15)
   }
 }

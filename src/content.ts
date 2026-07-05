@@ -20,7 +20,8 @@ export const CHAPTER_COPY: readonly ChapterCopy[] = [
   {
     eyebrow: 'CHAPTER 01 — VILLAGE DAWN',
     title: 'Where It Starts',
-    tagline: 'A bicycle, a dirt road, and the first time I asked how software actually works.',
+    tagline:
+      'A hand-me-down laptop and borrowed internet: first HTML, first CSS, first "hello world" — self-taught long before it was a job.',
   },
   {
     eyebrow: 'CHAPTER 02 — TOWN MORNING',
@@ -35,7 +36,8 @@ export const CHAPTER_COPY: readonly ChapterCopy[] = [
   {
     eyebrow: 'CHAPTER 04 — CITY DUSK',
     title: 'Heavier Machine',
-    tagline: 'Engineering lead at Eigenlytics × Luxia. Bigger systems, bigger calls, the Safari.',
+    tagline:
+      'The whole climb on one skyline: freelance → Brainerhub → OpenAI/Meta contract → engineering lead at Eigenlytics × Luxia.',
   },
   {
     eyebrow: 'CHAPTER 05 — NEON NIGHT',
@@ -55,18 +57,102 @@ export const CONTACT = {
   linkedin: 'https://www.linkedin.com/in/aaryansinha16',
   medium: 'https://medium.com/@aaryansinha16',
   site: 'https://devovia.com',
-  /** set to '/resume.pdf' after dropping the file into public/ */
-  resumeUrl: '',
+  resumeUrl: '/resume.pdf',
 } as const
 
-/** Highway hoardings — skills as sun-bleached roadside ads (DESIGN: hoardings double as skill boards). */
-export const SKILL_BOARDS: readonly { title: string; sub: string }[] = [
-  { title: 'REACT · NEXT.JS · TS', sub: 'production UI since the freelance years' },
-  { title: 'NESTJS · NODE · POSTGRES', sub: 'APIs that survive real traffic' },
-  { title: 'THREE.JS · WEBGL', sub: 'you are driving through one right now' },
-  { title: 'REAL-TIME · YJS · SOCKETS', sub: 'collaborative editing, live everything' },
-  { title: '12+ PROJECTS SHIPPED', sub: 'before "developer" was a job title' },
-  { title: 'AWS · DOCKER · CI/CD', sub: 'deploys on push, sleeps at night' },
+/** Highway hoardings — skills + Brainerhub-era facts as roadside ads. */
+export const SKILL_BOARDS: readonly { title: string; sub: string; accent: string }[] = [
+  {
+    title: 'REACT · NEXT.JS · TS',
+    sub: 'production UI since the freelance years',
+    accent: '#1e6fb8',
+  },
+  { title: 'NESTJS · NODE · POSTGRES', sub: 'APIs that survive real traffic', accent: '#c1442e' },
+  {
+    title: '3+ CLIENT PROJECTS SOLO',
+    sub: 'owned end to end at Brainerhub — zero handoffs',
+    accent: '#8a5a2e',
+  },
+  {
+    title: 'AD-ANALYTICS × 4 PLATFORMS',
+    sub: 'Google · Meta · TikTok · Snapchat, real-time',
+    accent: '#42618a',
+  },
+  { title: 'THREE.JS · WEBGL', sub: 'you are driving through one right now', accent: '#1e6fb8' },
+  {
+    title: "'RISING STAR' — YEAR ONE",
+    sub: 'team-lead duties + cross-team PR reviews',
+    accent: '#c9a23a',
+  },
+  {
+    title: 'REAL-TIME · YJS · SOCKETS',
+    sub: 'collaborative editing, live everything',
+    accent: '#42618a',
+  },
+  { title: 'AWS · DOCKER · CI/CD', sub: 'deploys on push, sleeps at night', accent: '#6e7a3a' },
+]
+
+/** The banner the little plane tows over the highway. */
+export const PLANE_BANNER = '5+ YRS · 12+ APPS · AI-NATIVE — AARYAN SINHA'
+
+/** Village learning signboards — the self-taught beginnings, hand-painted. */
+export const VILLAGE_SIGNS: readonly string[] = [
+  '<html>',
+  'hello, world',
+  'css { }',
+  'view-source',
+  'first website →',
+  'console.log("!")',
+]
+
+/** Town wall graffiti — attention to detail, not wallpaper. */
+export const TOWN_GRAFFITI: readonly { text: string; color: string }[] = [
+  { text: '</> ship it', color: '#c1442e' },
+  { text: 'chai + code', color: '#42618a' },
+  { text: 'localhost:3000', color: '#5a6631' },
+  { text: '12+ apps', color: '#8a5a2e' },
+  { text: 'git commit -m "life"', color: '#623253' },
+]
+
+/** City dusk — the career arc as glitchy tower billboards (resume-sourced). */
+export const CITY_BILLBOARDS: readonly {
+  era: string
+  title: string
+  sub: string
+  color: string
+}[] = [
+  {
+    era: '2018–2023',
+    title: 'FREELANCE',
+    sub: '12+ apps for international clients',
+    color: '#ff8c42',
+  },
+  { era: '2021', title: 'ACADBOOST', sub: 'taught personal finance & markets', color: '#ffd9a0' },
+  { era: '2022', title: 'MASAI SCHOOL', sub: 'full-time engineering program', color: '#d8e0ff' },
+  {
+    era: '2023–2026',
+    title: 'BRAINERHUB',
+    sub: "3+ solo client projects · 'Rising Star'",
+    color: '#ff8c42',
+  },
+  {
+    era: '2025',
+    title: 'OPENAI / META',
+    sub: 'JS/TS expert — LLM training contract',
+    color: '#7de8ff',
+  },
+  {
+    era: '2025–2026',
+    title: 'PAISAEASY',
+    sub: 'compliance-grade fintech, real money',
+    color: '#ffd9a0',
+  },
+  {
+    era: '2026–NOW',
+    title: 'EIGENLYTICS × LUXIA',
+    sub: 'engineering lead — LLM & RAG live',
+    color: '#ff8c42',
+  },
 ]
 
 /** Town shopfront signboards — the learning-years street. */
@@ -111,6 +197,8 @@ export interface DetourDef {
   eyebrow: string
   title: string
   style: 'board' | 'holo'
+  /** strip = DOM panel row; world = clickable in-world billboards */
+  mode?: 'strip' | 'world'
   /** which chapter zone the stop belongs to */
   zone: number
   /** where along the zone the rider pulls over (0..1 of the zone) */
@@ -166,6 +254,7 @@ export const DETOURS: readonly DetourDef[] = [
     eyebrow: 'DETOUR — THE AI FLAGSHIPS',
     title: 'Shipping intelligence, not demos',
     style: 'holo',
+    mode: 'world',
     zone: 5,
     anchorT: 0.55,
     scrollLen: 0.075,

@@ -90,6 +90,22 @@ export function initScrollSpine(): () => void {
     },
   })
 
+  // Ch6 autopilot (owner request): entering the circuit hands the wheel
+  // over — the vehicle drives itself to the road's end. Any user scroll
+  // input takes back control (lenis folds user deltas into the animation).
+  let autopilotDone = false
+  const unsubAutopilot = useJourney.subscribe(
+    (s) => s.chapter,
+    (chapter) => {
+      if (chapter !== 6 || autopilotDone) return
+      autopilotDone = true
+      window.setTimeout(() => {
+        if (!lenis || useJourney.getState().chapter !== 6) return
+        lenis.scrollTo(lenis.limit, { duration: 9, easing: (t: number) => 1 - Math.pow(1 - t, 2) })
+      }, 900)
+    },
+  )
+
   // ?chapter=N — jump once layout/measurements exist.
   const startChapter = START_CHAPTER
   if (startChapter != null) {
@@ -100,6 +116,7 @@ export function initScrollSpine(): () => void {
   }
 
   return () => {
+    unsubAutopilot()
     master?.scrollTrigger?.kill()
     master?.kill()
     master = null

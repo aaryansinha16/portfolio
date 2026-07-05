@@ -108,7 +108,7 @@ export function getNeonStatics(): Group {
   }
   const strips: Strip[] = []
   for (const t of towers) {
-    const n = Math.floor(rngRange(rng, 0.4, 2.8))
+    const n = Math.floor(rngRange(rng, 0, 2.0))
     for (let k = 0; k < n; k++) {
       const vertical = rng() < 0.6
       const face = rng() < 0.5 ? 0 : Math.PI
@@ -134,6 +134,17 @@ export function getNeonStatics(): Group {
     list.push(s)
     byMat.set(s.mat, list)
   })
+  const BACKING_MAT = new MeshStandardMaterial({ color: '#0b0e1e', roughness: 0.85 })
+  const backings = new InstancedMesh(BOX, BACKING_MAT, strips.length)
+  strips.forEach((st, i) => {
+    dummy.position.set(st.x - Math.sin(st.yaw) * 0.08, st.y, st.z - Math.cos(st.yaw) * 0.08)
+    dummy.rotation.set(0, st.yaw, 0)
+    dummy.scale.set(st.sx + 0.5, st.sy + 0.5, 0.08)
+    dummy.updateMatrix()
+    backings.setMatrixAt(i, dummy.matrix)
+  })
+  backings.instanceMatrix.needsUpdate = true
+  group.add(backings)
   for (const [matIdx, list] of byMat) {
     const mat =
       matIdx === -1 ? FLICKER_MATS[0] : matIdx === -2 ? FLICKER_MATS[1] : STATIC_MATS[matIdx]
@@ -202,7 +213,7 @@ export function getNeonStatics(): Group {
         depthWrite: false,
       }),
     )
-    streak.position.set(pos.x, pos.y + 0.09, pos.z)
+    streak.position.set(pos.x, pos.y + 0.12, pos.z)
     streak.rotation.set(-Math.PI / 2, 0, yaw + Math.PI)
     streak.scale.set(2.4, 9, 1)
     group.add(streak)
@@ -244,37 +255,6 @@ export function getNeonStatics(): Group {
     post.position.set(pos.x, pos.y + 1.0, pos.z)
     post.scale.set(0.12, 2.0, 0.12)
     group.add(post, sign)
-  }
-
-  /* smaller streaks under a sampling of the strips nearest the road */
-  const nearStrips = strips.filter((s) => s.y < 8).slice(0, 22)
-  if (nearStrips.length > 0) {
-    const streakMats = [
-      new MeshBasicMaterial({
-        map: streakTex,
-        color: '#00e5ff',
-        transparent: true,
-        opacity: 0.28,
-        blending: AdditiveBlending,
-        depthWrite: false,
-      }),
-      new MeshBasicMaterial({
-        map: streakTex,
-        color: '#ff2e88',
-        transparent: true,
-        opacity: 0.28,
-        blending: AdditiveBlending,
-        depthWrite: false,
-      }),
-    ]
-    nearStrips.forEach((s, i) => {
-      // puddle glow on the ground beneath the strip
-      const streak = new Mesh(streakGeo, streakMats[i % 2])
-      streak.position.set(s.x, 0.08, s.z)
-      streak.rotation.set(-Math.PI / 2, 0, s.yaw + Math.PI)
-      streak.scale.set(1.4, rngRange(rng, 4, 7), 1)
-      group.add(streak)
-    })
   }
 
   cachedSteam = steamAnchors

@@ -151,6 +151,34 @@ great, zero console errors.
 
 ---
 
+## Polish round — owner feedback (2026-07-05) — ALL DONE
+
+- [x] 1+9+10: per-vehicle audio voices crossfaded at swap boundaries (bicycle = freewheel
+      ticks + wind + bell, NO engine; moto lope / R15 rev / Safari sub); sound ON by default,
+      armed on first gesture (explicit mute persists)
+- [x] 2: roadside flicker — road deck lifted to 8cm, terrain polygonOffset, shadow frustum
+      snapped to a world grid (texel crawl), normalBias up
+- [x] 3: ch1 tagline → self-taught HTML/CSS/JS days; 6 hand-painted learning signboards
+- [x] 4a: town parapets + plinths + proud window frames (glass inset), roofline margin so
+      windows never float against sky; sprayed graffiti on plain facades
+- [x] 4b: ch2 detour boards — paper grain, tape strips, marker underlines, SHIPPED×12 stamp,
+      coffee ring, per-board motion as they cross the stage
+- [x] 5a: traffic frame-skipping = stale instanced bounding spheres → frustumCulled off
+- [x] 5b: traffic wheels ×4, windshields, truck cabs
+- [x] 5c: hoardings 9.6×4.4 vintage-ad style w/ accent bars + the banner plane circling
+      overhead ("5+ YRS · 12+ APPS · AI-NATIVE")
+- [x] 5d: nine wind turbines with spinning rotors along the highway
+- [x] 5e: Brainerhub facts on the boards (3+ solo projects, ad-analytics ×4, Rising Star)
+- [x] 6: ch4 = the career chapter — 7 glitch-flickering tower billboards (freelance →
+      AcadBoost → Masai → Brainerhub → OpenAI/Meta → Paisaeasy → Eigenlytics×Luxia) + arc tagline
+- [x] 7a: puddle strips cut; every neon strip now mounted on a dark backing panel
+- [x] 7b: ch5 = clickable in-world billboards (hover glow, live GitHub stars painted into
+      the canvas, click opens) — DOM cards removed for this stop
+- [x] 8a: ch6 autopilot — entering the circuit eases the ride to the road's end (user
+      scroll takes back control)
+- [x] 8b: interactive terminal — Enter on `contact --now` opens email; help / whoami /
+      projects / open <name> / resume / github / linkedin / medium / clear
+
 ## Deliberate scope cuts (v1)
 
 - No rigged/animated human character (silhouette tricks only) — see decisions.md ADR-4

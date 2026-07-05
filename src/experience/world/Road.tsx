@@ -32,7 +32,7 @@ export function Dashes() {
       const p = metersToProgress(i * DASH_EVERY + DASH_EVERY / 2)
       pointAt(p, point)
       tangentAt(p, tangent)
-      dummy.position.set(point.x, point.y + 0.07, point.z)
+      dummy.position.set(point.x, point.y + 0.11, point.z)
       dummy.rotation.set(0, Math.atan2(tangent.x, tangent.z), 0)
       // Tilt the dash to lie on the climb's slope.
       const pitch = Math.asin(Math.max(-1, Math.min(1, tangent.y)))

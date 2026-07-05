@@ -7,9 +7,12 @@ import {
   Object3D,
   Vector3,
 } from 'three'
+import { Mesh, PlaneGeometry } from 'three'
 import { getZoneRoad } from '../../world/roadSamples'
 import { buildTowerMesh, buildWindowMesh, genTowers } from '../../world/towers'
+import { makeTextPanel } from '../../world/textPanel'
 import { createRng, rngRange } from '../../../utils/random'
+import { CITY_BILLBOARDS } from '../../../content'
 
 /**
  * Ch4 City statics: dusk towers with lit window grids, sodium streetlights,
@@ -45,6 +48,10 @@ const BEACON_MAT = new MeshStandardMaterial({
 })
 
 const dummy = new Object3D()
+
+/** career-billboard materials — index.tsx drives flicker on a subset */
+export const BILLBOARD_FLICKER_MATS: MeshStandardMaterial[] = []
+
 let cachedGroup: Group | null = null
 let cachedBeacons: InstancedMesh | null = null
 let cachedBirdAnchors: Vector3[] | null = null
@@ -186,6 +193,90 @@ export function getCityStatics(): Group {
   }
   lights.instanceMatrix.needsUpdate = true
   group.add(lights)
+
+  /* the career arc — big billboards mounted on road-facing tower faces,
+     spread through the zone (owner: ch4 is the experience chapter) */
+  {
+    const usable = towers.filter((t) => {
+      const s2 = road.at(0)
+      void s2
+      return t.h > 22
+    })
+    CITY_BILLBOARDS.forEach((bb, i) => {
+      const targetM = 28 + (i * (road.zoneMeters - TUNNEL_LEN - 70)) / (CITY_BILLBOARDS.length - 1)
+      // nearest tall tower to the target position
+      let best = usable[0]
+      let bestD = Infinity
+      road.place(targetM, 0, pos)
+      const rx = pos.x
+      const rz = pos.z
+      for (const t of usable) {
+        const d = Math.hypot(t.x - rx, t.z - rz)
+        if (d < bestD && d < 55) {
+          bestD = d
+          best = t
+        }
+      }
+      if (!best) return
+      // face whose normal points back toward the road
+      const toRoadX = rx - best.x
+      const toRoadZ = rz - best.z
+      const candidates = [
+        best.yaw + Math.PI / 2,
+        best.yaw - Math.PI / 2,
+        best.yaw,
+        best.yaw + Math.PI,
+      ]
+      let faceYaw = candidates[0]
+      let bestDot = -Infinity
+      for (const cy of candidates) {
+        const dot = Math.sin(cy) * toRoadX + Math.cos(cy) * toRoadZ
+        if (dot > bestDot) {
+          bestDot = dot
+          faceYaw = cy
+        }
+      }
+      const nx = Math.sin(faceYaw)
+      const nz = Math.cos(faceYaw)
+      const halfDepth = Math.max(best.w, best.d) / 2
+
+      const tex = makeTextPanel({
+        title: bb.title,
+        sub: `${bb.era} · ${bb.sub}`,
+        bg: '#12162a',
+        fg: bb.color,
+        glow: true,
+        border: `${bb.color}55`,
+        w: 896,
+        h: 384,
+      })
+      const mat = new MeshStandardMaterial({
+        color: '#000000',
+        emissive: '#ffffff',
+        emissiveMap: tex,
+        map: tex,
+        emissiveIntensity: 1.5,
+        roughness: 0.7,
+        toneMapped: false,
+      })
+      if (i % 2 === 1) BILLBOARD_FLICKER_MATS.push(mat)
+      const boardW = 12
+      const boardH = 5.6
+      const boardY = Math.min(best.h - 4, 16 + (i % 3) * 4)
+      const face = new Mesh(new PlaneGeometry(boardW, boardH), mat)
+      face.position.set(
+        best.x + nx * (halfDepth + 0.25),
+        best.y + boardY,
+        best.z + nz * (halfDepth + 0.25),
+      )
+      face.rotation.y = faceYaw
+      const backing = new Mesh(new PlaneGeometry(boardW + 0.7, boardH + 0.7), CONCRETE_MAT)
+      backing.position.copy(face.position)
+      backing.rotation.y = faceYaw
+      backing.translateZ(-0.08)
+      group.add(backing, face)
+    })
+  }
 
   /* aircraft-warning beacons on the five tallest towers (blinked per frame) */
   const tallest = [...towers].sort((a, b) => b.h - a.h).slice(0, 5)

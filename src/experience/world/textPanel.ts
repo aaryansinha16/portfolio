@@ -21,6 +21,10 @@ export interface TextPanelSpec {
   bleach?: number
   /** neon mode: glowing tube text with a halo, for emissiveMap use */
   glow?: boolean
+  /** graffiti mode: no background fill, sprayed text with soft halo */
+  transparent?: boolean
+  /** vintage-ad mode: bold color bar behind the title */
+  accentBar?: string
 }
 
 export function makeTextPanel(spec: TextPanelSpec): CanvasTexture {
@@ -31,8 +35,16 @@ export function makeTextPanel(spec: TextPanelSpec): CanvasTexture {
   canvas.height = h
   const ctx = canvas.getContext('2d')!
 
-  ctx.fillStyle = spec.bg
-  ctx.fillRect(0, 0, w, h)
+  if (!spec.transparent) {
+    ctx.fillStyle = spec.bg
+    ctx.fillRect(0, 0, w, h)
+  }
+
+  if (spec.accentBar) {
+    ctx.fillStyle = spec.accentBar
+    ctx.fillRect(0, 0, w, h * 0.16)
+    ctx.fillRect(0, h * 0.94, w, h * 0.06)
+  }
 
   if (spec.border) {
     ctx.strokeStyle = spec.border
@@ -46,7 +58,18 @@ export function makeTextPanel(spec: TextPanelSpec): CanvasTexture {
   ctx.textBaseline = 'middle'
   const titleSize = spec.sub ? h * 0.3 : h * 0.36
   ctx.font = `900 ${titleSize}px 'Arial Narrow', 'Arial Black', sans-serif`
-  if (spec.glow) {
+  if (spec.transparent) {
+    // sprayed: soft halo passes then a rough core, slightly rotated
+    ctx.save()
+    ctx.translate(w / 2, h / 2)
+    ctx.rotate(-0.04)
+    ctx.shadowColor = spec.fg
+    ctx.shadowBlur = h * 0.16
+    ctx.fillText(spec.title, 0, 0, w * 0.9)
+    ctx.shadowBlur = h * 0.05
+    ctx.fillText(spec.title, 0, 0, w * 0.9)
+    ctx.restore()
+  } else if (spec.glow) {
     // neon: wide soft halo, then a tighter pass, then a near-white core
     ctx.shadowColor = spec.fg
     ctx.shadowBlur = h * 0.22

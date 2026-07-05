@@ -212,7 +212,7 @@ export function getCircuitStatics(): Group {
     let prev: { x: number; y: number; z: number } | null = null
     for (let m = 8; m <= bf.startM + 6; m += 11) {
       road.place(m, lane, pos)
-      const pt = { x: pos.x, y: pos.y + 0.085, z: pos.z }
+      const pt = { x: pos.x, y: pos.y + 0.12, z: pos.z }
       if (prev) {
         quad(prev.x, prev.y, prev.z, pt.x, pt.y, pt.z, (m - bf.startM) / bf.length, 0.3)
       }

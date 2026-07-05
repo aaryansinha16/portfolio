@@ -60,6 +60,18 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (f)** — POLISH ROUND (owner's 10 points) COMPLETE. Bugs: traffic frame-skip
+  was stale instanced bounding spheres (frustumCulled=false); roadside flicker was road/
+  terrain z-fight (deck→8cm) + shadow texel crawl (snap light target to 0.5m grid); vehicle
+  flipped at spline end (lookAt degenerate — clamp along to end-4.5, camera to end-15.5).
+  Audio: per-vehicle voices (bike ticks/moto lope/R15 rev/Safari sub) crossfaded at swap
+  marks; sound ON by default via first-gesture arming. Content: village learning signs, town
+  graffiti+house detail, highway ad-boards+windmills+banner plane+traffic detail, city career
+  billboards w/ flicker, neon clickable in-world billboards (stars painted onto canvas),
+  detour board craft pass, ch6 autopilot + interactive terminal. Leak lesson repeated:
+  ANY per-mount material with a CanvasTexture map leaks on remount (banner) — singleton it.
+  resume.pdf live (public/) + CONTACT.resumeUrl set. All gates green, 60fps, textures flat.
+
 - **2026-07-05 (e)** — PHASE 6 COMPLETE (minus manual cross-browser + domain). Fuel-gauge
   loader on real boot signals; SYNTHESIZED audio (engine saws + wind noise, velocity-driven,
   night-darkened; starter ignition; off by default, HUD toggle); GFX pin in HUD (auto ratchet

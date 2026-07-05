@@ -78,39 +78,59 @@ function DetourStrip({ index }: { index: number }) {
     const apply = (scroll: number) => {
       const root = rootRef.current
       const track = trackRef.current
-      if (!root || !track) return
+      if (!root) return
       const t = normRange(scroll, window_.scrollStart, window_.scrollStart + window_.scrollLen)
       const active = t > 0.0005 && t < 0.9995
       root.style.visibility = active ? 'visible' : 'hidden'
-      root.style.pointerEvents = active ? 'auto' : 'none'
+      // world mode is a header only — clicks must reach the canvas below
+      root.style.pointerEvents = active && track ? 'auto' : 'none'
       if (!active) return
       // edge fades; panels ride from right to left across the window
       const o = Math.min(smoothstep(clamp01(t / 0.07)), smoothstep(clamp01((1 - t) / 0.07)))
       root.style.opacity = o.toFixed(3)
+      if (!track) return
       const overflow = Math.max(0, track.scrollWidth - root.clientWidth)
       const inner = smoothstep(clamp01((t - 0.05) / 0.9))
-      track.style.transform = `translateX(${(-inner * overflow).toFixed(1)}px)`
+      const tx = -inner * overflow
+      track.style.transform = `translateX(${tx.toFixed(1)}px)`
+      // craft pass: boards breathe as they cross the center of the stage
+      const vw = root.clientWidth
+      for (const child of Array.from(track.children) as HTMLElement[]) {
+        const center = child.offsetLeft + tx + child.offsetWidth / 2 - vw / 2
+        const k = clamp01(1 - Math.abs(center) / (vw * 0.7))
+        child.style.transform = `translateY(${((1 - k) * 16).toFixed(1)}px) rotate(${(
+          (center / vw) *
+          2.2
+        ).toFixed(2)}deg) scale(${(0.96 + k * 0.05).toFixed(3)})`
+      }
     }
     apply(useJourney.getState().progress)
     return useJourney.subscribe((s) => s.progress, apply)
   }, [window_])
 
   const def = window_.def
+  const world = def.mode === 'world'
   return (
-    <div ref={rootRef} className={`detour detour--${def.style}`} style={{ visibility: 'hidden' }}>
-      <div className="detour__scrim" />
+    <div
+      ref={rootRef}
+      className={`detour detour--${def.style}${world ? ' detour--world' : ''}`}
+      style={{ visibility: 'hidden' }}
+    >
+      {!world && <div className="detour__scrim" />}
       <header className="detour__header">
         <p className="detour__eyebrow">{def.eyebrow}</p>
         <h2 className="detour__title">{def.title}</h2>
-        <p className="detour__hint">keep scrolling ⌄</p>
+        <p className="detour__hint">{world ? 'click a billboard to open ↗' : 'keep scrolling ⌄'}</p>
       </header>
-      <div className="detour__viewport">
-        <div ref={trackRef} className="detour__track">
-          {def.panels.map((p) => (
-            <Panel key={p.title} panel={p} style={def.style} />
-          ))}
+      {!world && (
+        <div className="detour__viewport">
+          <div ref={trackRef} className="detour__track">
+            {def.panels.map((p) => (
+              <Panel key={p.title} panel={p} style={def.style} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

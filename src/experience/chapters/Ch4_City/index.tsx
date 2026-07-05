@@ -3,10 +3,27 @@ import { useFrame } from '@react-three/fiber'
 import { Object3D } from 'three'
 import { FarSilhouettes } from '../GreyboxBiome'
 import { cityConfig } from './config'
-import { getCityBeacons, getCityBirdAnchors, getCityStatics } from './cityField'
+import {
+  BILLBOARD_FLICKER_MATS,
+  getCityBeacons,
+  getCityBirdAnchors,
+  getCityStatics,
+} from './cityField'
 import { BirdFlock } from '../../world/BirdFlock'
 
 const dummy = new Object3D()
+
+/** Buzzy career billboards — random-telegraph flicker per sign. */
+function BillboardFlicker() {
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    BILLBOARD_FLICKER_MATS.forEach((mat, i) => {
+      const on = Math.sin(t * (13 + i * 4.7)) * Math.sin(t * (3.1 + i)) > -0.86
+      mat.emissiveIntensity = on ? 1.5 : 0.35
+    })
+  })
+  return null
+}
 
 /** Blinks the rooftop aircraft-warning beacons (city ambient mover). */
 function Beacons() {
@@ -57,6 +74,7 @@ export default function Ch4_City() {
     <group>
       <primitive object={statics} dispose={null} />
       <Beacons />
+      <BillboardFlicker />
       <BirdFlock
         anchors={birdAnchors}
         count={8}

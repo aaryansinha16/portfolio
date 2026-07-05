@@ -136,7 +136,9 @@ function stateFor(def: VehicleDef, m: number, out: VState): VState {
       return out
     }
   }
-  out.along = m
+  // stop a hair short of the spline's end — at the exact endpoint the
+  // look-ahead degenerates (lookAt of its own position flips the vehicle)
+  out.along = Math.min(m, totalLength - 4.5)
   out.lateral = 0
   out.speedScale = 1
   out.parkedT = 0
@@ -170,7 +172,7 @@ function ChoreoVehicle({ def }: { def: VehicleDef }) {
     tangentAt(sNow.along / totalLength, tangent)
     right.set(-tangent.z, 0, tangent.x).normalize()
     pos.addScaledVector(right, sNow.lateral)
-    pos.y += 0.05
+    pos.y += 0.08
     group.position.copy(pos)
 
     // Heading: 3m ahead along the choreography (lateral from the ahead
@@ -179,7 +181,7 @@ function ChoreoVehicle({ def }: { def: VehicleDef }) {
     tangentAt((sNow.along + 3) / totalLength, tangent)
     right.set(-tangent.z, 0, tangent.x).normalize()
     ahead.addScaledVector(right, sAhead.lateral)
-    ahead.y += 0.05
+    ahead.y += 0.08
     group.lookAt(ahead)
     // Parked rides sit nosed slightly into the shoulder, not lane-parallel.
     if (sNow.parkedT > 0.01) group.rotateY(0.12 * sNow.parkedT)

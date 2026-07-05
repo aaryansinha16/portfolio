@@ -6,6 +6,7 @@ import { neonConfig } from './config'
 import { FLICKER_MATS, getNeonStatics, getNeonSteamAnchors } from './neonField'
 import { PuffColumn } from '../../world/PuffColumn'
 import { getZoneRoad } from '../../world/roadSamples'
+import { ProjectBillboards } from '../../detours/ProjectBillboards'
 
 /** Random-telegraph flicker for the two designated neon materials. */
 function NeonFlicker() {
@@ -84,6 +85,7 @@ export default function Ch5_Neon() {
       <primitive object={statics} dispose={null} />
       <NeonFlicker />
       <Drones />
+      <ProjectBillboards />
       {steam.length > 0 && (
         <PuffColumn anchors={steam} color="#5a6a8a" opacity={0.2} rise={5} rate={0.14} size={1.4} />
       )}

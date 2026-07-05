@@ -38,6 +38,12 @@ const BOARD_BACK_MAT = new MeshStandardMaterial({ color: '#5a544a', roughness: 0
 const dummy = new Object3D()
 let cachedGroup: Group | null = null
 let cachedBirdAnchors: Vector3[] | null = null
+let cachedTurbines: { x: number; y: number; z: number; h: number }[] | null = null
+
+export function getHighwayTurbines(): { x: number; y: number; z: number; h: number }[] {
+  getHighwayStatics()
+  return cachedTurbines!
+}
 
 export function getHighwayBirdAnchors(): Vector3[] {
   getHighwayStatics()
@@ -119,19 +125,19 @@ export function getHighwayStatics(): Group {
     road.place(m, lateral, pos)
     const yaw = Math.atan2(s.tx, s.tz) + Math.PI + side * -0.22 // face oncoming viewers
 
-    const boardW = 7.2
-    const boardH = 3.4
-    const boardY = 5.0
+    const boardW = 9.6
+    const boardH = 4.4
+    const boardY = 6.2
 
     const texture = makeTextPanel({
       title: board.title,
       sub: board.sub,
-      bg: '#e8e2d0',
-      fg: '#2e2c28',
-      border: '#8a8272',
-      bleach: 0.55,
-      w: 640,
-      h: 300,
+      bg: '#ece5d0',
+      fg: '#26241f',
+      accentBar: board.accent,
+      bleach: 0.35,
+      w: 768,
+      h: 352,
     })
     const face = new Mesh(
       new PlaneGeometry(boardW, boardH),
@@ -165,6 +171,28 @@ export function getHighwayStatics(): Group {
   poles.instanceMatrix.needsUpdate = true
   poles.castShadow = true
   group.add(poles)
+
+  /* windmill towers along the horizon — rotors spin in a component */
+  const turbines: { x: number; y: number; z: number; h: number }[] = []
+  for (let i = 0; i < 9; i++) {
+    const m = 30 + (i * (road.zoneMeters - 60)) / 8
+    const side = i % 2 === 0 ? 1 : -1
+    road.place(m, rngRange(rng, 52, 115) * side, pos)
+    turbines.push({ x: pos.x, y: pos.y, z: pos.z, h: rngRange(rng, 22, 30) })
+  }
+  const TURBINE_MAT = new MeshStandardMaterial({ color: '#d8dcdc', roughness: 0.5, metalness: 0.2 })
+  const towerGeo = new CylinderGeometry(0.35, 0.8, 1, 8)
+  const towersMesh = new InstancedMesh(towerGeo, TURBINE_MAT, turbines.length)
+  turbines.forEach((tb, i) => {
+    dummy.position.set(tb.x, tb.y + tb.h / 2, tb.z)
+    dummy.rotation.set(0, 0, 0)
+    dummy.scale.set(1, tb.h, 1)
+    dummy.updateMatrix()
+    towersMesh.setMatrixAt(i, dummy.matrix)
+  })
+  towersMesh.instanceMatrix.needsUpdate = true
+  group.add(towersMesh)
+  cachedTurbines = turbines
 
   /* kites soar high over the plains */
   cachedBirdAnchors = [120, 300].map((m) => {

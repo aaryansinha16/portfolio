@@ -41,7 +41,9 @@ export function CameraRig() {
     if (!(camera instanceof PerspectiveCamera)) return
 
     const dt = clamp(rawDt, 1e-4, 0.1)
-    const p = state.splineProgress
+    // never let the camera catch the vehicle at the road's end — the ride
+    // stops at 1, the camera holds a car-length behind
+    const p = Math.min(state.splineProgress, 1 - 15.5 / totalLength)
 
     // Velocity in m/s from progress deltas, exp-smoothed; store it for the
     // vehicle bob / debug HUD. First frame after a jump: treat as stationary.

@@ -762,3 +762,132 @@ body {
     padding: 6px 8px;
   }
 }
+
+/* ---------- interactive terminal ---------- */
+
+.contact__body {
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.contact__inputline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contact__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #d8e6da;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  caret-color: #39ff88;
+  padding: 2px 0;
+}
+
+.contact__hint {
+  color: rgba(57, 255, 136, 0.5);
+  font-size: 12px;
+  border: 1px solid rgba(57, 255, 136, 0.35);
+  border-radius: 3px;
+  padding: 1px 6px;
+  animation: loader-pulse 1.6s ease-in-out infinite;
+}
+
+/* ---------- ch2 detour boards, craft pass ---------- */
+
+.detour--board .detour-panel {
+  position: relative;
+  background:
+    repeating-linear-gradient(2deg, rgba(120, 100, 60, 0.05) 0 3px, transparent 3px 7px),
+    linear-gradient(174deg, #f0e9d6, #ddd3bc);
+  border: 1px solid #b8ac90;
+  border-radius: 2px;
+  box-shadow:
+    0 2px 0 #8a8065,
+    0 18px 40px rgba(10, 8, 4, 0.45);
+  transition: transform 0.15s ease-out;
+}
+
+/* tape strips pinning each board */
+.detour--board .detour-panel::before,
+.detour--board .detour-panel::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  width: 74px;
+  height: 26px;
+  background: rgba(232, 224, 200, 0.65);
+  border: 1px solid rgba(140, 125, 95, 0.35);
+  box-shadow: 0 2px 5px rgba(30, 24, 12, 0.2);
+}
+
+.detour--board .detour-panel::before {
+  left: 14%;
+  transform: rotate(-7deg);
+}
+
+.detour--board .detour-panel::after {
+  right: 14%;
+  transform: rotate(5deg);
+}
+
+.detour--board .detour-panel__title {
+  position: relative;
+  display: inline-block;
+}
+
+/* marker underline */
+.detour--board .detour-panel__title::after {
+  content: '';
+  position: absolute;
+  left: -3px;
+  right: -8px;
+  bottom: 1px;
+  height: 0.34em;
+  background: rgba(193, 68, 46, 0.28);
+  transform: skewX(-12deg) rotate(-0.6deg);
+  z-index: -1;
+}
+
+/* rubber stamp on the intro board */
+.detour--board .detour-panel--intro {
+  background:
+    repeating-linear-gradient(2deg, rgba(120, 100, 60, 0.05) 0 3px, transparent 3px 7px),
+    linear-gradient(174deg, #efe6cd, #d8ccb2);
+}
+
+.detour--board .detour-panel--intro .detour-panel__body::after {
+  content: 'SHIPPED ×12';
+  position: absolute;
+  right: 18px;
+  bottom: 20px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(122, 51, 39, 0.75);
+  border: 2px solid rgba(122, 51, 39, 0.55);
+  border-radius: 4px;
+  padding: 5px 9px;
+  transform: rotate(-8deg);
+}
+
+/* coffee ring, one card only */
+.detour--board .detour-panel:nth-child(3)::before {
+  content: '';
+  top: auto;
+  bottom: 16px;
+  left: auto;
+  right: 20px;
+  width: 46px;
+  height: 46px;
+  background: transparent;
+  border: 5px solid rgba(122, 84, 40, 0.14);
+  border-radius: 50%;
+  box-shadow: none;
+  transform: none;
+}

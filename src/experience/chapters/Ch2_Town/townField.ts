@@ -15,7 +15,7 @@ import { getZoneRoad } from '../../world/roadSamples'
 import { makeTextPanel } from '../../world/textPanel'
 import { WEDGE_GEO } from '../../vehicles/parts'
 import { createRng, rngRange } from '../../../utils/random'
-import { DETOUR_SIGN, TOWN_SHOPS } from '../../../content'
+import { DETOUR_SIGN, TOWN_GRAFFITI, TOWN_SHOPS } from '../../../content'
 
 /**
  * Ch2 Town statics, built once and module-cached: a dense shop street —
@@ -107,9 +107,13 @@ export function getTownStatics(): Group {
   const walls: Inst[] = []
   const insets: Inst[] = []
   const windows: Inst[] = []
+  const frames: Inst[] = []
+  const parapets: Inst[] = []
+  const plinths: Inst[] = []
   const awnings: Inst[] = []
   const crates: Inst[] = []
   const sacks: Inst[] = []
+  const graffitiSpots: { x: number; y: number; z: number; yaw: number; w: number }[] = []
   const signSpots: { x: number; y: number; z: number; yaw: number; w: number; shop: number }[] = []
   const smoke: Vector3[] = []
   const laundry: LaundryLine[] = []
@@ -138,6 +142,27 @@ export function getTownStatics(): Group {
         sy: height,
         sz: depth,
         color,
+      })
+      // parapet cap + plinth band ground the slab (owner: houses read bland)
+      parapets.push({
+        x: pos.x,
+        y: pos.y + height + 0.14,
+        z: pos.z,
+        yaw,
+        sx: width + 0.35,
+        sy: 0.28,
+        sz: depth + 0.35,
+        color: c.copy(color).multiplyScalar(0.72).clone(),
+      })
+      plinths.push({
+        x: pos.x,
+        y: pos.y + 0.35,
+        z: pos.z,
+        yaw,
+        sx: width + 0.2,
+        sy: 0.7,
+        sz: depth + 0.2,
+        color: c.copy(color).multiplyScalar(0.55).clone(),
       })
 
       // front face center, toward the road
@@ -214,19 +239,48 @@ export function getTownStatics(): Group {
         shopCounter++
       }
 
+      if (!isShop && rng() < 0.32 && graffitiSpots.length < TOWN_GRAFFITI.length) {
+        graffitiSpots.push({
+          x: fx - s.rx * side * 0.02,
+          y: pos.y + 1.7,
+          z: fz - s.rz * side * 0.02,
+          yaw: faceYaw,
+          w: Math.min(width * 0.5, 4.2),
+        })
+      }
+
       // upper-floor windows
       for (let f = 1; f < floors; f++) {
         const n = Math.max(1, Math.floor(width / 2.4))
         for (let w = 0; w < n; w++) {
           const off = (w - (n - 1) / 2) * (width / n)
-          windows.push({
-            x: fx + Math.cos(yaw) * off,
-            y: pos.y + f * (height / floors) + 1.2,
-            z: fz - Math.sin(yaw) * off,
+          // frame proud of the wall, glass inset just behind its face —
+          // a bright surround grounds dark windows against pale walls/sky
+          const nx2 = -s.rx * side
+          const nz2 = -s.rz * side
+          const wx = fx + Math.cos(yaw) * off
+          const wz = fz - Math.sin(yaw) * off
+          const wy = pos.y + f * (height / floors) + 1.2
+          // windows hugging the roofline read as floating slabs against sky
+          if (wy > pos.y + height - 1.7) continue
+          frames.push({
+            x: wx + nx2 * 0.08,
+            y: wy,
+            z: wz + nz2 * 0.08,
             yaw,
-            sx: 0.75,
-            sy: 1.15,
-            sz: 0.1,
+            sx: 0.98,
+            sy: 1.38,
+            sz: 0.08,
+            color: c.copy(color).multiplyScalar(1.35).clone(),
+          })
+          windows.push({
+            x: wx + nx2 * 0.14,
+            y: wy,
+            z: wz + nz2 * 0.14,
+            yaw,
+            sx: 0.72,
+            sy: 1.1,
+            sz: 0.05,
           })
         }
       }
@@ -257,6 +311,40 @@ export function getTownStatics(): Group {
   fill(insetMesh, insets)
   const windowMesh = new InstancedMesh(BOX, DARK_INSET_MAT, windows.length)
   fill(windowMesh, windows)
+  const frameMesh = new InstancedMesh(BOX, WALL_MAT, frames.length)
+  fill(frameMesh, frames)
+  const parapetMesh = new InstancedMesh(BOX, WALL_MAT, parapets.length)
+  fill(parapetMesh, parapets)
+  parapetMesh.castShadow = true
+  const plinthMesh = new InstancedMesh(BOX, WALL_MAT, plinths.length)
+  fill(plinthMesh, plinths)
+  group.add(frameMesh, parapetMesh, plinthMesh)
+
+  /* graffiti — sprayed planes on a few plain facades */
+  graffitiSpots.forEach((spot, i) => {
+    const g = TOWN_GRAFFITI[i % TOWN_GRAFFITI.length]
+    const tag = new Mesh(
+      SIGN_GEO,
+      new MeshStandardMaterial({
+        map: makeTextPanel({
+          title: g.text,
+          bg: '#000000',
+          fg: g.color,
+          transparent: true,
+          w: 512,
+          h: 160,
+        }),
+        transparent: true,
+        roughness: 0.95,
+      }),
+    )
+    tag.position.set(spot.x, spot.y, spot.z)
+    tag.rotation.y = spot.yaw
+    tag.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.03
+    tag.scale.set(spot.w, spot.w * 0.3, 1)
+    group.add(tag)
+  })
+
   const awningMesh = new InstancedMesh(WEDGE_GEO, AWNING_MAT, awnings.length)
   fill(awningMesh, awnings, true, rng)
   const crateMesh = new InstancedMesh(BOX, CRATE_MAT, crates.length)

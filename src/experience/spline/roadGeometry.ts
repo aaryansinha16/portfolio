@@ -5,7 +5,7 @@ import { zoneFloat } from '../atmosphere/ColorScript'
 import { CHAPTERS } from '../chapters/registry'
 
 export const ROAD_WIDTH = 8 // meters (CLAUDE.md units convention)
-const ROAD_LIFT = 0.05 // sit just above terrain to avoid z-fighting
+const ROAD_LIFT = 0.08 // sit clear above terrain — 3cm gaps shimmer at grazing angles
 
 /**
  * Extrudes a flat ribbon along the road curve.

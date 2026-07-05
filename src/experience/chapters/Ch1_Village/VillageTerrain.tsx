@@ -20,6 +20,11 @@ const terrainMat = new MeshStandardMaterial({
   flatShading: true,
   roughness: 1,
   metalness: 0,
+  // the flat corridor sits centimeters above the shared ground plane —
+  // bias depth so grazing angles never shimmer
+  polygonOffset: true,
+  polygonOffsetFactor: -2,
+  polygonOffsetUnits: -2,
 })
 
 function getTerrainGeometry(): PlaneGeometry {

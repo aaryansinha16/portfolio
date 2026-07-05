@@ -50,6 +50,11 @@ export function Atmosphere() {
     const sun = sunRef.current
     if (sun) {
       const vehiclePos = pointAt(vehicleProgressAt(splineProgress), scratch.v1)
+      // snap the shadow frustum to a coarse world grid — a continuously
+      // sliding light makes shadow texels crawl (reads as edge flicker)
+      vehiclePos.x = Math.round(vehiclePos.x * 2) / 2
+      vehiclePos.y = Math.round(vehiclePos.y * 2) / 2
+      vehiclePos.z = Math.round(vehiclePos.z * 2) / 2
       sun.color.copy(env.sunColor)
       sun.intensity = env.sunIntensity
       sun.position.copy(vehiclePos).addScaledVector(env.sunDir, SUN_DISTANCE)
@@ -73,7 +78,7 @@ export function Atmosphere() {
         shadow-camera-near={1}
         shadow-camera-far={420}
         shadow-bias={-0.0004}
-        shadow-normalBias={0.03}
+        shadow-normalBias={0.05}
       />
     </group>
   )

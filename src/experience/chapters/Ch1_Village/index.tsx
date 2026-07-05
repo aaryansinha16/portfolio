@@ -6,6 +6,7 @@ import { Huts } from './Huts'
 import { Crops } from './Crops'
 import { Birds } from './Birds'
 import { Smoke } from './Smoke'
+import { VillageSigns } from './VillageSigns'
 
 /**
  * Chapter 1 — Village Dawn, the Phase 2 vertical slice. Three depth layers:
@@ -24,6 +25,7 @@ export default function Ch1_Village() {
       <Crops />
       <Birds />
       <Smoke />
+      <VillageSigns />
       <FarSilhouettes zone={1} config={villageConfig} />
     </group>
   )
