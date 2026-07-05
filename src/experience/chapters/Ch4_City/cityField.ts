@@ -361,15 +361,15 @@ export function getCityStatics(): Group {
       road.place(targetM, 0, pos)
       const rx = pos.x
       const rz = pos.z
-      // FIRST-ROW towers first (owner: boards on back-row walls hid behind
-      // the street-front buildings): candidates near the station sorted by
-      // |lateral|, requiring an unused tower, ≥45m along-road separation
-      // from every other sign, and clear sight-lines BOTH toward the
-      // approaching driver AND toward the road — degrading gracefully.
+      // FIRST-ROW towers first, and ONLY within 10m of the station: the
+      // glance slow-mo window sits AT the station, and mounts snapped
+      // ±25m away put the head-turn outside the slow-down (the ch4 "not
+      // slow when tilted" bug). Anything without a near, clean tower goes
+      // freestanding at the station — perfectly aligned by construction.
       const cands = usable
         .map((t) => ({ t, p: projOf.get(t)! }))
         .filter(
-          (c) => Math.abs(c.p.m - targetM) < 34 && Math.abs(c.p.lat) < 36 && !usedTowers.has(c.t),
+          (c) => Math.abs(c.p.m - targetM) < 10 && Math.abs(c.p.lat) < 36 && !usedTowers.has(c.t),
         )
         .sort((a, b) => Math.abs(a.p.lat) - Math.abs(b.p.lat))
       const boardYTest = 11

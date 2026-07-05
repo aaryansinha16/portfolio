@@ -23,16 +23,19 @@ export const CH2_BOARD_STATIONS: readonly { m: number; side: number }[] = [
 ]
 
 /**
- * ch4: nine evenly spaced stations — 7 career boards + 2 gantries woven
- * into the same rhythm so nothing ever stacks in one sight-line (owner:
- * Masai hid THE CLIMB, Paisaeasy hid 7 ROLES).
+ * ch4: SEVEN career-board stations spread across the whole usable zone
+ * (~64m apart — owner: "keep more distance between content"), with the two
+ * gantries at midpoints BETWEEN boards. Gantries hang overhead, so they
+ * don't crowd the roadside rhythm, and nothing ever shares a sight-line.
  */
 export function cityStations(zoneMeters: number): { boards: number[]; gantries: number[] } {
-  const usable = zoneMeters - TUNNEL_LEN - 90
-  const station = (i: number) => 30 + (i * usable) / 8
+  const start = 22
+  const end = zoneMeters - TUNNEL_LEN - 48
+  const boards = Array.from({ length: 7 }, (_, i) => start + (i * (end - start)) / 6)
   return {
-    boards: [0, 1, 3, 4, 5, 7, 8].map(station),
-    gantries: [2, 6].map(station),
+    boards,
+    // THE CLIMB after AcadBoost, 7 ROLES after OpenAI/Meta (narrative order)
+    gantries: [(boards[1] + boards[2]) / 2, (boards[4] + boards[5]) / 2],
   }
 }
 

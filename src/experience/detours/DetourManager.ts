@@ -54,7 +54,7 @@ interface RemapWindow {
  * between the boards stays exactly where it was. */
 const GLANCE_BACK = 25
 const GLANCE_LEN = 22
-const GLANCE_STRETCH = 3.6
+const GLANCE_STRETCH = 4.4
 
 const ALL_WINDOWS: readonly RemapWindow[] = (() => {
   const entries: RemapWindow[] = []

@@ -60,6 +60,15 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (m)** — ROUND 8, ch4 final. Root cause of "slow-mo doesn't work when
+  tilted": the LOOK keyed to actual mounts, the SLOW WINDOW to stations — ±25m tower
+  snap put them out of phase (ch2 worked because buildings snap ≤6m). Rule: any paired
+  scroll-window + camera-behavior feature must key BOTH to the same coordinate; if
+  mounts can drift, constrain the drift (≤10m) or mount at the station (freestanding).
+  Verified numerically via window.__toScroll: probe (Δspline/Δscroll) in-window vs
+  cruise = 12.7%. Station split: overhead gantries don't count against roadside rhythm —
+  7 boards over the full zone (~64m) + gantries at midpoints.
+
 - **2026-07-05 (l)** — ROUND 7. When a procedural mount keeps failing an aesthetic bar
   after two geometric-test hardenings, STOP hardening and switch mount types: content-level
   `freestanding: true` puts a board on roadside poles at its exact station — guaranteed

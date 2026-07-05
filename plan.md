@@ -151,6 +151,19 @@ great, zero console errors.
 
 ---
 
+## Polish round 8 — ch4 glance alignment + spacing, final (2026-07-05) — ALL DONE
+
+- [x] the ch4 "not slow when tilted" bug had a NAMEABLE cause: the tilt keys to the
+      actual mount, the slow-mo window to the station — and ch4 tower mounts snapped up
+      to ±25m away, so the head-turn happened OUTSIDE the slow-down (ch2 buildings snap
+      ≤6m, which is why it always worked there). Tower mounts are now accepted only
+      within 10m of the station; everything else goes freestanding AT the station —
+      aligned by construction. Measured from the live mapping: 12.7% of cruise inside a
+      ch4 glance
+- [x] board spacing: gantries left the station split — 7 boards spread over the whole
+      usable zone (~64m apart), gantries at midpoints between AcadBoost/Masai and
+      OpenAI/Paisaeasy. Glance stretch 4.4, SCROLL_PAGES 22 → 25 (cruise pacing held)
+
 ## Polish round 7 — deeper slow-mo, Masai freestanding, station rhythm (2026-07-05) — ALL DONE
 
 - [x] 1: glance slow-mo deepened to ~18% of cruise (stretch 3.6, 22m windows ≈ 400px of
