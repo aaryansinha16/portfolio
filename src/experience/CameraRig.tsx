@@ -40,7 +40,7 @@ const scratch = createScratch()
 const camFrame: RuntimeCam = { height: 2.1, right: 1.2, fov: 45, chase: 8.5 }
 const focusPos = new Vector3()
 /** how far the gaze commits to a story board (1 = stare straight at it) */
-const FOCUS_MIX = 0.85
+const FOCUS_MIX = 0.92
 
 export function CameraRig() {
   const prevP = useRef(-1)
@@ -112,8 +112,11 @@ export function CameraRig() {
     // 10m away whips the camera; the same commit 35m out is a glance.
     const focusW = focusLookAt(pVehicle * totalLength, focusPos)
     if (focusW > 0) {
+      // ch2 boards sit close to the shoulder — the old 0.5 proximity floor
+      // read as a half-hearted turn there (owner: "increase the tilt in
+      // chapter 2 too"). Floor raised; full commit from ~22m out.
       const dH = Math.hypot(focusPos.x - camPos.x, focusPos.z - camPos.z)
-      const proximity = 0.5 + 0.5 * clamp01((dH - 6) / 26)
+      const proximity = 0.68 + 0.32 * clamp01((dH - 6) / 16)
       look.lerp(focusPos, focusW * FOCUS_MIX * proximity)
     }
     camera.up.set(0, 1, 0)

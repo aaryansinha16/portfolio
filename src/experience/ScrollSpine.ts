@@ -14,8 +14,10 @@ import { PREFERS_REDUCED_MOTION, START_CHAPTER } from '../utils/query'
  * master timeline (position === progress, since its duration is 1).
  */
 
-/** Page height in viewports. Tune for pacing: higher = slower, calmer drive. */
-export const SCROLL_PAGES = 18
+/** Page height in viewports. Tune for pacing: higher = slower, calmer drive.
+ * (Raised 18 → 20 with the deeper glance windows so cruise pacing between
+ * boards stays where it was.) */
+export const SCROLL_PAGES = 20
 /** Scrub smoothing — the ONLY camera smoothing in the app (see CLAUDE.md burns). */
 export const SCRUB = 0.8
 
@@ -113,8 +115,8 @@ export function initScrollSpine(): () => void {
         } else {
           apState = 'driving'
           apRamp = 0
-          // flat out (owner, twice) — the rest of ch6 in ~4s
-          apSpeed = Math.max(200, (lenis.limit - lenis.scroll) / 4)
+          // flat out (owner, three times now) — the rest of ch6 in ~3s
+          apSpeed = Math.max(260, (lenis.limit - lenis.scroll) / 2.8)
         }
       }
     } else if (apState === 'driving') {

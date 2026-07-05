@@ -60,6 +60,18 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (k)** — ROUND 6. THE AUDIO BUG: 'wheel' is NOT a user-activation gesture —
+  an AudioContext created/resumed in a wheel handler stays suspended ("not allowed to
+  start") and if the arming listener is one-shot, sound is silent FOREVER on deploy while
+  working in every headless probe (they never assert audibility). Arm audio only on
+  pointerdown/keydown/touchstart and RETRY resume() per gesture until state==='running'.
+  Perception lesson: a slow-mo window must hold a meaningful share of scroll (~2% runway
+  here ≈ 300px) — 55px of half-speed is imperceptible no matter how mathematically real;
+  when adding pause-budget, raise SCROLL_PAGES to keep cruise pacing constant. Occlusion
+  checks must use REAL approach sight-lines (board → road points behind the station);
+  straight tangent rays miss curve corners. Ch4 mounts: sort candidates by |lateral| for
+  street-front towers; glance timing keys to the mount's projected along-m.
+
 - **2026-07-05 (j)** — ROUND 5: glance dialed up (mix .85, half-rate windows), autopilot
   limit/4, ch4 mounts constrained (unused tower + ≥45m along-road separation + sight-line
   + board width fitted to its wall — 15m panels on 10m faces wrapped corners into

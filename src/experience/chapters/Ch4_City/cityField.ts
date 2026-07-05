@@ -290,41 +290,56 @@ export function getCityStatics(): Group {
     const stations = cityStations(road.zoneMeters)
     const gantryMs = stations.gantries
 
-    // a board is USELESS if a nearer tower blocks its approach sight-line:
-    // walk the ray from the mount toward the oncoming driver at board
-    // height and reject mounts whose ray clips another tower's footprint
-    const rayBlocked = (from: TowerSpec, py: number, dirX: number, dirZ: number) => {
-      for (let k = 10; k <= 72; k += 7) {
-        const sx = from.x + dirX * k
-        const sz = from.z + dirZ * k
-        for (const t of usable) {
-          if (t === from || t.y + t.h + 1 < py) continue
-          const dx = sx - t.x
-          const dz = sz - t.z
-          const c = Math.cos(t.yaw)
-          const s = Math.sin(t.yaw)
-          const lx = dx * c - dz * s
-          const lz = dx * s + dz * c
-          if (Math.abs(lx) < t.w / 2 + 1 && Math.abs(lz) < t.d / 2 + 1) return true
+    // a board is USELESS if other towers block its approach sight-lines.
+    // A straight ray along the station tangent missed curve geometry (the
+    // camera cuts corners) — so walk the segments from the mount to the
+    // driver's ACTUAL road positions 14–56m before the station, at board
+    // height, and reject mounts any tower footprint interrupts.
+    const sightPoint = new Vector3()
+    const sightClear = (t: TowerSpec, stationM: number, py: number) => {
+      for (const back of [14, 26, 40, 56]) {
+        road.place(stationM - back, 0, sightPoint)
+        const dx = sightPoint.x - t.x
+        const dz = sightPoint.z - t.z
+        const len = Math.hypot(dx, dz) || 1
+        const ux = dx / len
+        const uz = dz / len
+        for (let s = 9; s < len - 5; s += 6) {
+          const sx = t.x + ux * s
+          const sz = t.z + uz * s
+          for (const o of usable) {
+            if (o === t || o.y + o.h + 1 < py) continue
+            const ox2 = sx - o.x
+            const oz2 = sz - o.z
+            const c = Math.cos(o.yaw)
+            const sn = Math.sin(o.yaw)
+            const lx = ox2 * c - oz2 * sn
+            const lz = ox2 * sn + oz2 * c
+            if (Math.abs(lx) < o.w / 2 + 0.5 && Math.abs(lz) < o.d / 2 + 0.5) return false
+          }
         }
       }
-      return false
+      return true
     }
 
-    // each usable tower's position ALONG the road — separation and glance
-    // timing both need it
-    const alongOf = new Map<TowerSpec, number>()
+    // each usable tower's road-frame position (meters along + signed
+    // lateral) — separation, first-row preference and glance timing all
+    // need it
+    const projOf = new Map<TowerSpec, { m: number; lat: number }>()
     for (const t of usable) {
       let bestD2 = Infinity
-      let m = 0
+      let smp0 = road.samples[0]
       for (const smp of road.samples) {
         const d2 = (t.x - smp.x) ** 2 + (t.z - smp.z) ** 2
         if (d2 < bestD2) {
           bestD2 = d2
-          m = smp.meters
+          smp0 = smp
         }
       }
-      alongOf.set(t, m)
+      projOf.set(t, {
+        m: smp0.meters,
+        lat: (t.x - smp0.x) * smp0.rx + (t.z - smp0.z) * smp0.rz,
+      })
     }
     // mounts already spoken for — stations kept boards apart on paper, but
     // tower-snapping (±25m) collapsed neighbors into each other (owner's
@@ -339,31 +354,33 @@ export function getCityStatics(): Group {
       road.place(targetM, 0, pos)
       const rx = pos.x
       const rz = pos.z
-      // candidate mounts by distance; prefer the nearest that is unused,
-      // ≥45m along the road from every other sign, AND has a clear
-      // approach sight-line — degrading gracefully if the block is dense
+      // FIRST-ROW towers first (owner: boards on back-row walls hid behind
+      // the street-front buildings): candidates near the station sorted by
+      // |lateral|, requiring an unused tower, ≥45m along-road separation
+      // from every other sign, and clear sight-lines BOTH toward the
+      // approaching driver AND toward the road — degrading gracefully.
       const cands = usable
-        .map((t) => ({ t, d: Math.hypot(t.x - rx, t.z - rz) }))
-        .filter((c) => c.d < 48 && !usedTowers.has(c.t))
-        .sort((a, b) => a.d - b.d)
+        .map((t) => ({ t, p: projOf.get(t)! }))
+        .filter(
+          (c) => Math.abs(c.p.m - targetM) < 34 && Math.abs(c.p.lat) < 36 && !usedTowers.has(c.t),
+        )
+        .sort((a, b) => Math.abs(a.p.lat) - Math.abs(b.p.lat))
       if (cands.length === 0) return
       const boardYTest = 11
       const best = (
-        cands.find(
-          (c) =>
-            clearOf(alongOf.get(c.t)!, 45) && !rayBlocked(c.t, c.t.y + boardYTest, -sT.tx, -sT.tz),
-        ) ??
-        cands.find((c) => clearOf(alongOf.get(c.t)!, 38)) ??
+        cands.find((c) => clearOf(c.p.m, 45) && sightClear(c.t, targetM, c.t.y + boardYTest)) ??
+        cands.find((c) => clearOf(c.p.m, 38)) ??
         cands[0]
       ).t
       usedTowers.add(best)
-      usedAlong.push(alongOf.get(best)!)
+      usedAlong.push(projOf.get(best)!.m)
       const toRoadLen = Math.hypot(rx - best.x, rz - best.z) || 1
       const toRoadX = (rx - best.x) / toRoadLen
       const toRoadZ = (rz - best.z) / toRoadLen
-      // candidate faces carry their normal, half-extent AND width. Score
-      // blends "faces the road" with "faces the APPROACHING driver" — pure
-      // toRoad hung the last boards on side walls you only saw when past.
+      // candidate faces carry their normal, half-extent AND width. The
+      // ROAD-side wall wins (owner ask) with a modest approach-facing tilt
+      // so the last boards never end up on side walls you only see when
+      // already past.
       const candidates: Array<[number, number, number]> = [
         [best.yaw, best.d / 2, best.w],
         [best.yaw + Math.PI, best.d / 2, best.w],
@@ -377,7 +394,7 @@ export function getCityStatics(): Group {
       for (const [cy, half, fw] of candidates) {
         const nxC = Math.sin(cy)
         const nzC = Math.cos(cy)
-        const score = nxC * toRoadX + nzC * toRoadZ + 0.9 * (nxC * -sT.tx + nzC * -sT.tz)
+        const score = 1.2 * (nxC * toRoadX + nzC * toRoadZ) + 0.55 * (nxC * -sT.tx + nzC * -sT.tz)
         if (score > bestScore) {
           bestScore = score
           faceYaw = cy
@@ -412,7 +429,7 @@ export function getCityStatics(): Group {
       )
       face.rotation.y = faceYaw
       // the camera glances at THIS board — timed to where the tower stands
-      registerFocusTarget(CHAPTER_MARKS[4] * totalLength + alongOf.get(best)!, face.position)
+      registerFocusTarget(CHAPTER_MARKS[4] * totalLength + projOf.get(best)!.m, face.position)
       const backing = new Mesh(new PlaneGeometry(boardW + 0.8, boardH + 0.8), CONCRETE_MAT)
       backing.position.copy(face.position)
       backing.rotation.y = faceYaw

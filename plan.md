@@ -151,6 +151,24 @@ great, zero console errors.
 
 ---
 
+## Polish round 6 — perceivable slow-mo, road-side mounts, LIVE AUDIO (2026-07-05) — ALL DONE
+
+- [x] 1: Masai/Brainerhub kept on ROAD-SIDE first-row walls — candidates sort by
+      |lateral| (street-front towers first) and the occlusion test now walks the
+      driver's ACTUAL approach sight-lines (mount → road positions 14–56m back) instead
+      of a straight station-tangent ray that missed curve geometry
+- [x] 2+3: the glance slow-down is now FELT — the old 24m window crossed in ~55px of
+      scroll, gone before perception. Windows are 26m at stretch 2.6 (~38% of cruise,
+      ~2% of the runway each) and phased in camera coordinates to sit under the tilt's
+      hold; SCROLL_PAGES 18 → 20 keeps cruise pacing unchanged. Tilt raised again
+      (mix 0.92, proximity floor 0.68) so ch2's close rooftop boards get the full turn
+- [x] 4: autopilot +40% again — the rest of ch6 in ~3s
+- [x] 5: DEPLOYED AUDIO WAS SILENT — 'wheel' is not a browser user-activation gesture,
+      so arming sound on scroll built an AudioContext the browser refused to start, and
+      the one-shot listener never retried. Sound now arms on pointerdown/keydown/
+      touchstart only, and enable() keeps retrying resume() on every real gesture until
+      the context is actually running (ignition beat fires once audible)
+
 ## Polish round 5 — glance strength + ch4 mount constraints (2026-07-05) — ALL DONE
 
 - [x] 1: glance tilt strengthened — FOCUS_MIX 0.55 → 0.85, proximity floor 0.5 (the

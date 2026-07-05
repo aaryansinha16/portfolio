@@ -227,19 +227,30 @@ class RoadAudio {
     osc.stop(t + 1.1)
   }
 
-  /** Sound defaults ON: start with the first user gesture (autoplay policy). */
+  /**
+   * Sound defaults ON: start with the first user gesture. CRUCIAL: 'wheel'
+   * is NOT a user-activation gesture — arming on scroll built a context the
+   * browser refused to start ("The AudioContext was not allowed to start"),
+   * and the one-shot listener never retried, leaving the deploy silent.
+   * Only pointerdown / keydown / touchstart count as activation.
+   */
+  private static readonly GESTURES: readonly (keyof WindowEventMap)[] = [
+    'pointerdown',
+    'keydown',
+    'touchstart',
+  ]
+
   armOnGesture() {
     if (this.enabled || this.disarm) return
     const start = () => {
       cleanup()
       this.enable()
     }
-    const events: Array<keyof WindowEventMap> = ['pointerdown', 'keydown', 'wheel', 'touchstart']
     const cleanup = () => {
-      events.forEach((e) => window.removeEventListener(e, start))
+      RoadAudio.GESTURES.forEach((e) => window.removeEventListener(e, start))
       this.disarm = null
     }
-    events.forEach((e) => window.addEventListener(e, start, { passive: true }))
+    RoadAudio.GESTURES.forEach((e) => window.addEventListener(e, start, { passive: true }))
     this.disarm = cleanup
   }
 
@@ -247,10 +258,29 @@ class RoadAudio {
     this.disarm?.()
     this.build()
     const ctx = this.ctx!
-    void ctx.resume()
     this.enabled = true
     this.master!.gain.setTargetAtTime(0.55, ctx.currentTime, 0.25)
-    if (useJourney.getState().progress < 0.02) this.ignition()
+    // resume() only sticks inside a real activation gesture — keep retrying
+    // on every gesture until the context is actually running
+    const kickstart = () => {
+      if (!this.enabled) {
+        stopKicking()
+        return
+      }
+      void ctx.resume().then(() => {
+        if (ctx.state === 'running') {
+          stopKicking()
+          if (useJourney.getState().progress < 0.02) this.ignition()
+        }
+      })
+    }
+    const stopKicking = () => {
+      RoadAudio.GESTURES.forEach((e) => window.removeEventListener(e, kickstart))
+    }
+    kickstart()
+    if (ctx.state !== 'running') {
+      RoadAudio.GESTURES.forEach((e) => window.addEventListener(e, kickstart, { passive: true }))
+    }
     const tick = () => {
       if (!this.enabled) return
       this.update()
