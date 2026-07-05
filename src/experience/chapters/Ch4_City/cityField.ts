@@ -11,10 +11,15 @@ import {
 } from 'three'
 import { Mesh, PlaneGeometry } from 'three'
 import { getZoneRoad } from '../../world/roadSamples'
-import { buildTowerMesh, buildWindowMesh, genTowers } from '../../world/towers'
+import { buildTowerMesh, buildWindowMesh, genTowers, type TowerSpec } from '../../world/towers'
 import { makeTextPanel } from '../../world/textPanel'
+import { cityStations, TUNNEL_LEN } from '../../world/focusZones'
+import { registerFocusTarget } from '../../world/focusTargets'
+import { CHAPTER_MARKS, totalLength } from '../../spline/roadPath'
 import { createRng, rngRange } from '../../../utils/random'
 import { CITY_BILLBOARDS, CITY_GANTRIES } from '../../../content'
+
+export { TUNNEL_LEN }
 
 /**
  * A career-chapter billboard: era chip, huge glowing title, payoff line, and
@@ -101,7 +106,7 @@ function drawCareerBoard(
 
 const ZONE = 4
 const SEED = 4404
-export const TUNNEL_LEN = 78 // road covered by the tunnel, ending past the boundary
+// TUNNEL_LEN lives in focusZones (pure layout math) and is re-exported above
 
 const BOX = new BoxGeometry(1, 1, 1)
 const POLE_GEO = new CylinderGeometry(0.08, 0.1, 1, 6)
@@ -279,29 +284,49 @@ export function getCityStatics(): Group {
      half-extent — max(w,d)/2 left boards floating off the narrow faces. */
   {
     const usable = towers.filter((t) => t.h > 17)
-    const gantryMs = [road.zoneMeters * 0.24, road.zoneMeters * 0.58]
-    CITY_BILLBOARDS.forEach((bb, i) => {
-      let targetM = 28 + (i * (road.zoneMeters - TUNNEL_LEN - 70)) / (CITY_BILLBOARDS.length - 1)
-      // keep clear of the gantries — stacked signs hide each other (owner:
-      // Masai vs THE CLIMB, Paisaeasy vs 7 ROLES)
-      for (const g of gantryMs) {
-        if (Math.abs(targetM - g) < 34) targetM = g + (targetM >= g ? 34 : -34)
+    // boards and gantries share one evenly spaced station rhythm — nothing
+    // ever sits in another sign's sight-line (owner: Masai hid THE CLIMB,
+    // Paisaeasy hid 7 ROLES, Freelance hid behind a nearer tower)
+    const stations = cityStations(road.zoneMeters)
+    const gantryMs = stations.gantries
+
+    // a board is USELESS if a nearer tower blocks its approach sight-line:
+    // walk the ray from the mount toward the oncoming driver at board
+    // height and reject mounts whose ray clips another tower's footprint
+    const rayBlocked = (from: TowerSpec, py: number, dirX: number, dirZ: number) => {
+      for (let k = 10; k <= 72; k += 7) {
+        const sx = from.x + dirX * k
+        const sz = from.z + dirZ * k
+        for (const t of usable) {
+          if (t === from || t.y + t.h + 1 < py) continue
+          const dx = sx - t.x
+          const dz = sz - t.z
+          const c = Math.cos(t.yaw)
+          const s = Math.sin(t.yaw)
+          const lx = dx * c - dz * s
+          const lz = dx * s + dz * c
+          if (Math.abs(lx) < t.w / 2 + 1 && Math.abs(lz) < t.d / 2 + 1) return true
+        }
       }
-      // nearest usable tower to the target position
-      let best: (typeof usable)[number] | null = null
-      let bestD = Infinity
+      return false
+    }
+
+    CITY_BILLBOARDS.forEach((bb, i) => {
+      const targetM = stations.boards[i]
       const sT = road.at(targetM)
       road.place(targetM, 0, pos)
       const rx = pos.x
       const rz = pos.z
-      for (const t of usable) {
-        const d = Math.hypot(t.x - rx, t.z - rz)
-        if (d < bestD && d < 48) {
-          bestD = d
-          best = t
-        }
-      }
-      if (!best) return
+      // candidate mounts by distance; take the nearest with a CLEAR
+      // approach sight-line, falling back to the nearest outright
+      const cands = usable
+        .map((t) => ({ t, d: Math.hypot(t.x - rx, t.z - rz) }))
+        .filter((c) => c.d < 48)
+        .sort((a, b) => a.d - b.d)
+      if (cands.length === 0) return
+      const boardYTest = 11
+      const best =
+        cands.find((c) => !rayBlocked(c.t, c.t.y + boardYTest, -sT.tx, -sT.tz))?.t ?? cands[0].t
       const toRoadLen = Math.hypot(rx - best.x, rz - best.z) || 1
       const toRoadX = (rx - best.x) / toRoadLen
       const toRoadZ = (rz - best.z) / toRoadLen
@@ -351,6 +376,18 @@ export function getCityStatics(): Group {
         best.z + nz * (halfDepth + 0.3),
       )
       face.rotation.y = faceYaw
+      // the camera glances at THIS board — timed to where the tower
+      // actually stands (mounts can snap ±25m from their station)
+      let boardAlongM = targetM
+      let bestD2 = Infinity
+      for (const smp of road.samples) {
+        const d2 = (best.x - smp.x) ** 2 + (best.z - smp.z) ** 2
+        if (d2 < bestD2) {
+          bestD2 = d2
+          boardAlongM = smp.meters
+        }
+      }
+      registerFocusTarget(CHAPTER_MARKS[4] * totalLength + boardAlongM, face.position)
       const backing = new Mesh(new PlaneGeometry(boardW + 0.8, boardH + 0.8), CONCRETE_MAT)
       backing.position.copy(face.position)
       backing.rotation.y = faceYaw
@@ -360,7 +397,7 @@ export function getCityStatics(): Group {
 
     /* gantries — you drive right under these; unmissable career copy */
     CITY_GANTRIES.forEach((g, gi) => {
-      const m = road.zoneMeters * (gi === 0 ? 0.24 : 0.58)
+      const m = gantryMs[gi]
       const s = road.at(m)
       const yaw = Math.atan2(s.tx, s.tz)
       const steel = new MeshStandardMaterial({ color: '#23232c', metalness: 0.5, roughness: 0.5 })

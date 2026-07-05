@@ -13,6 +13,9 @@ import {
 } from 'three'
 import { getZoneRoad } from '../../world/roadSamples'
 import { makeTextPanel } from '../../world/textPanel'
+import { CH2_BOARD_STATIONS } from '../../world/focusZones'
+import { registerFocusTarget } from '../../world/focusTargets'
+import { CHAPTER_MARKS, totalLength } from '../../spline/roadPath'
 import { createRng, rngRange } from '../../../utils/random'
 import { DETOUR_SIGN, TOWN_GRAFFITI, TOWN_ROOF_BOARDS, TOWN_SHOPS } from '../../../content'
 
@@ -448,19 +451,18 @@ export function getTownStatics(): Group {
   group.add(signBackMesh)
 
   /* rooftop hoardings — the freelance years told from the skyline (owner:
-     the town looked right but said nothing). Six boards spread along the
-     street with real gaps, alternating sides, mounted at each house's
-     roof-front on twin posts. */
+     the town looked right but said nothing). Six boards at the shared
+     focus STATIONS (the scroll remap slows past them and the camera
+     glances up), alternating sides, mounted at each house's roof-front. */
   {
-    const targets = [60, 150, 240, 330, 420, 500]
     const used = new Set<number>()
     TOWN_ROOF_BOARDS.forEach((entry, bi) => {
-      const wantSide = bi % 2 === 0 ? -1 : 1
+      const station = CH2_BOARD_STATIONS[bi]
       let best = -1
       let bestD = Infinity
       roofCandidates.forEach((cand, ci) => {
-        if (cand.side !== wantSide || used.has(ci)) return
-        const d = Math.abs(cand.m - targets[bi])
+        if (cand.side !== station.side || used.has(ci)) return
+        const d = Math.abs(cand.m - station.m)
         if (d < bestD) {
           bestD = d
           best = ci
@@ -496,6 +498,8 @@ export function getTownStatics(): Group {
       panel.position.set(spot.x, panelY, spot.z)
       panel.rotation.y = spot.faceYaw
       panel.castShadow = true
+      // the camera glances at THIS position, timed to the actual building
+      registerFocusTarget(CHAPTER_MARKS[2] * totalLength + spot.m, panel.position)
       const backing = new Mesh(new PlaneGeometry(panelW + 0.2, panelH + 0.2), BACK_PANEL_MAT)
       backing.position.copy(panel.position)
       backing.rotation.y = spot.faceYaw

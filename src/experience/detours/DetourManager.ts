@@ -1,24 +1,26 @@
 import { CHAPTER_MARKS, totalLength } from '../spline/roadPath'
+import { FOCUS_STATIONS } from '../world/focusZones'
 import { DETOURS, type DetourDef } from '../../content'
 
 /**
- * Detours re-shape the scroll→spline mapping (DESIGN: "the journey pauses
- * and a strip takes over"). Each window either PLATEAUS the spline (strip
- * detours: the rider pulls over and DOM panels ride the scroll) or rolls it
- * in SLOW MOTION (world detours: the ride keeps moving past in-world
- * exhibits at a fraction of cruise speed):
+ * ONE piecewise scroll→spline remap owns every change of pace (prime
+ * directive #1: no second scroll consumer). Three window kinds share it:
+ *
+ *   plateau (strip detours) — spline holds still, DOM strip rides scroll
+ *   slow-mo (world detours) — the ride rolls at a fraction of cruise
+ *   glance (focus zones)    — a short soft slow-down past a story board,
+ *                             while CameraRig pans the gaze toward it
  *
  *   spline
- *     1 ┤                                    ╭──
- *       │                        ╭───────────╯      ← slope K outside windows
- *       │             ╭ ─ ─ ─ ──╯       ← slow-mo: shallow slope through
- *       │      ╭──────╯                    the showroom (span > 0)
- *     0 ┼──────╯   ← plateau: rider pulled over (span = 0)
- *       0 ──────────── scroll ──────────────→ 1
+ *     1 ┤                                  ╭──
+ *       │                       ╭──╌╌──────╯     ← ╌ glance: shallow dips
+ *       │            ╭─╌╌───────╯
+ *       │      ╭─────╯   ← plateau (span = 0)
+ *     0 ┼──────╯
+ *       0 ──────────── scroll ─────────────→ 1
  *
- * Both directions stay monotonic-ish (plateaus map back to their entry), so
- * everything remains a pure, reversible function of scroll (prime directive
- * #1 intact — this IS the master timeline's mapping, just not the identity).
+ * Everything stays monotonic (plateaus map back to their entry), so the
+ * whole journey remains a pure, reversible function of scroll.
  */
 
 export interface DetourWindow {
@@ -33,38 +35,74 @@ export interface DetourWindow {
   scrollLen: number
 }
 
-const totalPause = DETOURS.reduce((sum, d) => sum + d.scrollLen, 0)
-const totalSpan = DETOURS.reduce((sum, d) => sum + (d.spanMeters ?? 0) / totalLength, 0)
-/** drive-rate outside windows (both axes must still reach 1 together) */
-const K = (1 - totalSpan) / (1 - totalPause)
+interface RemapWindow {
+  spline: number
+  span: number
+  scrollLen: number
+  scrollStart: number
+  def?: DetourDef
+}
 
-export const DETOUR_WINDOWS: readonly DetourWindow[] = (() => {
-  const windows: DetourWindow[] = []
-  let pauseBefore = 0
-  let spanBefore = 0
+/* glance windows: 24m of road at ~74% of nominal rate, covering the
+ * approach to each station and a beat past it */
+const GLANCE_BACK = 20
+const GLANCE_LEN = 24
+const GLANCE_STRETCH = 1.35
+
+const ALL_WINDOWS: readonly RemapWindow[] = (() => {
+  const entries: RemapWindow[] = []
   for (const def of DETOURS) {
     const zoneStart = CHAPTER_MARKS[def.zone]
     const zoneEnd = CHAPTER_MARKS[def.zone + 1]
-    const spline = zoneStart + def.anchorT * (zoneEnd - zoneStart)
-    const span = (def.spanMeters ?? 0) / totalLength
-    windows.push({
+    entries.push({
       def,
-      spline,
-      span,
-      scrollStart: (spline - spanBefore) / K + pauseBefore,
+      spline: zoneStart + def.anchorT * (zoneEnd - zoneStart),
+      span: (def.spanMeters ?? 0) / totalLength,
       scrollLen: def.scrollLen,
+      scrollStart: 0,
     })
-    pauseBefore += def.scrollLen
-    spanBefore += span
   }
-  return windows
+  for (const st of FOCUS_STATIONS) {
+    const span = GLANCE_LEN / totalLength
+    entries.push({
+      spline: CHAPTER_MARKS[st.zone] + (st.m - GLANCE_BACK) / totalLength,
+      span,
+      scrollLen: span * GLANCE_STRETCH,
+      scrollStart: 0,
+    })
+  }
+  entries.sort((a, b) => a.spline - b.spline)
+
+  const totalPause = entries.reduce((sum, w) => sum + w.scrollLen, 0)
+  const totalSpan = entries.reduce((sum, w) => sum + w.span, 0)
+  const K = (1 - totalSpan) / (1 - totalPause)
+  let pauseBefore = 0
+  let spanBefore = 0
+  for (const w of entries) {
+    w.scrollStart = (w.spline - spanBefore) / K + pauseBefore
+    pauseBefore += w.scrollLen
+    spanBefore += w.span
+  }
+  return entries
 })()
+
+/** drive-rate outside windows (both axes must still reach 1 together) */
+const K = (() => {
+  const totalPause = ALL_WINDOWS.reduce((sum, w) => sum + w.scrollLen, 0)
+  const totalSpan = ALL_WINDOWS.reduce((sum, w) => sum + w.span, 0)
+  return (1 - totalSpan) / (1 - totalPause)
+})()
+
+/** the REAL detours (with defs) — overlays, billboards and probes use these */
+export const DETOUR_WINDOWS: readonly DetourWindow[] = ALL_WINDOWS.filter(
+  (w): w is RemapWindow & { def: DetourDef } => w.def != null,
+)
 
 /** scroll (0..1) → spline (0..1): the master mapping. */
 export function splineOf(scroll: number): number {
   let pauseBefore = 0
   let spanBefore = 0
-  for (const w of DETOUR_WINDOWS) {
+  for (const w of ALL_WINDOWS) {
     if (scroll < w.scrollStart) break
     if (scroll <= w.scrollStart + w.scrollLen) {
       return w.spline + ((scroll - w.scrollStart) / w.scrollLen) * w.span
@@ -79,7 +117,7 @@ export function splineOf(scroll: number): number {
 export function scrollOf(spline: number): number {
   let pauseBefore = 0
   let spanBefore = 0
-  for (const w of DETOUR_WINDOWS) {
+  for (const w of ALL_WINDOWS) {
     if (spline >= w.spline && w.span > 0 && spline <= w.spline + w.span) {
       return w.scrollStart + ((spline - w.spline) / w.span) * w.scrollLen
     }

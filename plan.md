@@ -151,6 +151,22 @@ great, zero console errors.
 
 ---
 
+## Polish round 4 — pace + the glance choreography (2026-07-05) — ALL DONE
+
+- [x] 1: ch6 autopilot pace — ~2.5× faster (rest of the chapter in ~6s, quick 1.3s
+      pull-away); verified 1150px of self-drive in the 3.5s probe window
+- [x] 2: ch4 stacking for real this time — boards AND gantries share one evenly spaced
+      9-station rhythm (no two signs in one sight-line), plus a ray-walk occlusion check
+      so a mount is rejected if a nearer tower blocks its approach view (the FREELANCE
+      board hid behind one)
+- [x] 3: THE GLANCE — passing any story board (6 town rooftops, 7 city career signs)
+      now slows the ride ~26% for 24m while the camera eases its gaze toward the board
+      and back to the road. Built as: pure shared stations (focusZones), extra windows
+      in the ONE scroll→spline remap (DetourManager — same machinery as the showroom
+      slow-mo), and a focus-target registry the biomes fill with actual board positions
+      (CameraRig blends the look, distance-scaled so near boards get a soft turn, far
+      boards a committed one). Fully scrub-reversible.
+
 ## Polish round 3 — owner re-review (2026-07-05) — ALL DONE
 
 - [x] 1: village sign posts poked over the panel → twin posts now sit BEHIND the board,

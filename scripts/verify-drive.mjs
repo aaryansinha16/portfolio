@@ -48,7 +48,12 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 810 } })
 const errors = []
 let glWarnings = 0
 page.on('console', (m) => {
-  if (m.type() === 'error') errors.push(m.text())
+  if (m.type() === 'error') {
+    // github star-count fetches get rate-limited (403) under repeated test
+    // runs — the app handles it (stars just don't render); not a defect
+    const src = m.location()?.url ?? ''
+    if (!src.includes('api.github.com')) errors.push(m.text())
+  }
   if (m.type() === 'warning' && m.text().includes('GL_')) glWarnings++
 })
 page.on('pageerror', (e) => errors.push(`PAGEERROR: ${e.message}`))
@@ -139,7 +144,7 @@ await page.evaluate(() => {
 // throttle). Sharing the screenshot marathon's browser polluted the gate:
 // its GPU process reads ~10fps low for a while after heavy capture work,
 // failing runs whose isolated re-probe was a clean 60.
-await new Promise((r) => setTimeout(r, 4000))
+await page.waitForTimeout(4000)
 const perfBrowser = await chromium.launch({
   channel: 'chrome',
   headless: true,

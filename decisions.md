@@ -139,3 +139,18 @@ function of scroll, so scrolling up rewinds the fall mid-air. Autopilot (per-tic
 steps, input-cancellable, re-armed on chapter exit) drives you off the edge hands-free.
 *Rejected:* time-driven fall animation (not reversible), physics impulse (same), ending the
 scroll runway at the edge (loses the beat the owner asked for).
+
+**ADR-18 · 2026-07-05 · Story-board glances are remap windows + a look registry**
+Owner: "when we pass a building with a board, slow down and the view moves to the side,
+then back." Implemented WITHOUT a second scroll consumer or timeline cuts: (1) focusZones
+holds pure per-zone stations shared by everyone; (2) DetourManager folds a 24m soft
+slow-mo window (span·1.35 scroll stretch ≈ 74% rate) around each station into the SAME
+piecewise scroll→spline remap that powers detours — one mapping owns every change of
+pace; (3) biomes register each board's actual world position into focusTargets, and
+CameraRig eases the look toward the active target (trapezoid envelope over [-26m, +8m],
+mix 0.55 scaled down for near mounts). Everything is a pure function of scroll, so
+scrubbing backward replays each glance in reverse. Boards register their REAL along-road
+meters (mounts snap to buildings/towers), while slow windows stay on the stations —
+exact gaze, approximately-timed slowdown, zero cross-module imports of three.js scenes.
+*Rejected:* GSAP timeline look-at tweens (not scrub-pure), slowing via camera-only
+tricks (owner asked for the vehicle to slow), per-board ScrollTriggers (second consumer).

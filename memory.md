@@ -60,6 +60,18 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (i)** — ROUND 4: the glance choreography. Architecture that keeps prime
+  directive #1: story-board STATIONS live in a pure module (focusZones — data only, owns
+  TUNNEL_LEN now); DetourManager folds them into the ONE piecewise scroll→spline remap as
+  soft slow-mo windows (24m @ ~74% rate, scrollLen = span·1.35); biomes register ACTUAL
+  board positions (focusTargets) and CameraRig lerps the look toward the active target
+  with a trapezoid envelope (-26m rise, hold, +8m fall) × distance-scaled mix (0.55 max,
+  floors at 0.35 — full commit at point-blank whips the camera). Register the board's
+  REAL along-m (towers snap ±25m from station), keep slow windows on stations. ch4 boards
+  + gantries now share one 9-station rhythm + a ray-walk occlusion check (reject mounts a
+  nearer tower blocks). Verify: filter api.github.com 403s from the error gate (star
+  fetches rate-limit under repeated runs; app handles it). Autopilot at limit/6 px/s.
+
 - **2026-07-05 (h)** — POLISH ROUND 3. Autopilot lesson: NEVER cancel-on-input for
   handover features — trackpad momentum tails fire wheel events 1-2s after fingers lift,
   so "any input cancels" means "never runs" on real hardware while headless probes stay

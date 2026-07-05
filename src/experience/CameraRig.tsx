@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { PerspectiveCamera } from 'three'
+import { PerspectiveCamera, Vector3 } from 'three'
 import {
   CLIFF_MAX_OVER,
   CLIFF_START_M,
@@ -12,6 +12,7 @@ import {
 } from './spline/roadPath'
 import { useJourney } from '../state/useJourney'
 import { sampleCamera, vehicleProgressAt, type RuntimeCam } from './atmosphere/ColorScript'
+import { focusLookAt } from './world/focusTargets'
 import { clamp, clamp01, damp } from '../utils/math'
 import { createScratch } from '../utils/scratch'
 
@@ -37,6 +38,9 @@ const CAM = {
 
 const scratch = createScratch()
 const camFrame: RuntimeCam = { height: 2.1, right: 1.2, fov: 45, chase: 8.5 }
+const focusPos = new Vector3()
+/** how far the gaze commits to a story board (1 = stare straight at it) */
+const FOCUS_MIX = 0.55
 
 export function CameraRig() {
   const prevP = useRef(-1)
@@ -101,6 +105,17 @@ export function CameraRig() {
     )
     pointPastEnd(lookM, look)
     look.y += CAM.lookHeight
+    // The glance: passing a story board (ch2 rooftops, ch4 career signs)
+    // eases the gaze toward it and back while the remap slows the ride —
+    // same pure-function-of-scroll rule as everything else. Boards mounted
+    // close to the shoulder get a SOFTER turn: committing 55% to a sign
+    // 10m away whips the camera; the same commit 35m out is a glance.
+    const focusW = focusLookAt(pVehicle * totalLength, focusPos)
+    if (focusW > 0) {
+      const dH = Math.hypot(focusPos.x - camPos.x, focusPos.z - camPos.z)
+      const proximity = 0.35 + 0.65 * clamp01((dH - 6) / 26)
+      look.lerp(focusPos, focusW * FOCUS_MIX * proximity)
+    }
     camera.up.set(0, 1, 0)
     camera.lookAt(look)
 
