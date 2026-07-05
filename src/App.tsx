@@ -7,6 +7,7 @@ import { HudControls } from './ui/HudControls'
 import { Loader } from './ui/Loader'
 import { Overlay } from './ui/Overlay'
 import { SeoContent } from './ui/SeoContent'
+import { SoundPrompt } from './ui/SoundPrompt'
 import { StaticJourney } from './ui/StaticJourney'
 import { PREFERS_REDUCED_MOTION } from './utils/query'
 import { webglAvailable } from './utils/webgl'
@@ -26,6 +27,7 @@ function DrivenJourney() {
       <DetourOverlay />
       <ContactTerminal />
       <HudControls />
+      <SoundPrompt />
       <Loader />
       <SeoContent />
     </>

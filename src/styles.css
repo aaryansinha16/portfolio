@@ -891,3 +891,72 @@ body {
   box-shadow: none;
   transform: none;
 }
+
+/* ---- the sound callout (points at the HUD's sound button) ---- */
+.sound-prompt {
+  position: fixed;
+  left: clamp(16px, 2vw, 28px);
+  bottom: clamp(64px, 9vh, 86px);
+  z-index: 31;
+  max-width: 250px;
+  padding: 14px 16px;
+  background: rgba(9, 12, 22, 0.92);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  animation: sound-prompt-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sound-prompt__text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+  color: #d8e6ea;
+  margin: 0 0 10px;
+}
+
+.sound-prompt__cta {
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: #041014;
+  background: #00e5ff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.35);
+}
+
+.sound-prompt__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 26px rgba(0, 229, 255, 0.55);
+}
+
+.sound-prompt__arrow {
+  position: absolute;
+  left: 26px;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  background: rgba(9, 12, 22, 0.92);
+  border-right: 1px solid rgba(0, 229, 255, 0.45);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.45);
+  transform: rotate(45deg);
+}
+
+@keyframes sound-prompt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

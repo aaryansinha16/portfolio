@@ -151,6 +151,15 @@ great, zero console errors.
 
 ---
 
+## Round 9 — sound callout + GitHub Pages goes live (2026-07-05) — ALL DONE
+
+- [x] sound callout: a small dialog above the HUD sound button ("For the full immersive
+      experience, turn the sound on" + START WITH SOUND). Its CTA click doubles as the
+      user-activation gesture audio needs; dismissed by any interaction or after 18s
+- [x] aaryansinha16.github.io now serves THE ROAD TRIP (was the old portfolio — still
+      recoverable from that repo's git history). `pnpm deploy:pages` builds and pushes
+      dist/ to the pages repo; verified live (title + canvas render + zero page errors)
+
 ## Polish round 8 — ch4 glance alignment + spacing, final (2026-07-05) — ALL DONE
 
 - [x] the ch4 "not slow when tilted" bug had a NAMEABLE cause: the tilt keys to the

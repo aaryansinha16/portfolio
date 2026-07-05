@@ -60,6 +60,15 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (n)** — ROUND 9: SoundPrompt (callout above HUD; CTA click IS the audio
+  activation gesture; dismisses on any interaction incl. wheel so verify shots stay
+  clean). GitHub Pages: aaryansinha16.github.io repo now holds BUILT output only (old
+  portfolio lives in its history); deploy via scripts/deploy-pages.sh (`pnpm
+  deploy:pages`) — clone pages repo, wipe all but .git, copy dist + .nojekyll + README,
+  commit, push. Site verified live. NOTE: Pages deploys are MANUAL from this machine;
+  Vercel stays auto-on-push. Two prod URLs now exist — deploy Pages after each approved
+  round or the root domain drifts behind vercel.
+
 - **2026-07-05 (m)** — ROUND 8, ch4 final. Root cause of "slow-mo doesn't work when
   tilted": the LOOK keyed to actual mounts, the SLOW WINDOW to stations — ±25m tower
   snap put them out of phase (ch2 worked because buildings snap ≤6m). Rule: any paired

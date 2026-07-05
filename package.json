@@ -18,7 +18,8 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/verify-drive.mjs"
+    "verify": "node scripts/verify-drive.mjs",
+    "deploy:pages": "bash scripts/deploy-pages.sh"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
