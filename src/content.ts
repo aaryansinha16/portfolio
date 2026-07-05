@@ -29,9 +29,10 @@ export const CHAPTER_COPY: readonly ChapterCopy[] = [
     tagline: '12+ freelance projects shipped before "developer" was a job title. First motorcycle.',
   },
   {
-    eyebrow: 'CHAPTER 03 — NH-48, NOON',
+    eyebrow: 'CHAPTER 03 — NH-48, MIDNIGHT',
     title: 'Highway Speed',
-    tagline: 'Full-stack years at Brainerhub: production systems, real deadlines, the R15.',
+    tagline:
+      'Night shift on the open road — full-stack years at Brainerhub: production systems, real deadlines, the R15.',
   },
   {
     eyebrow: 'CHAPTER 04 — CITY DUSK',

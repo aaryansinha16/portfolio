@@ -5,12 +5,13 @@ import { getHighwayBirdAnchors, getHighwayStatics } from './highwayField'
 import { Traffic } from './Traffic'
 import { Windmills } from './Windmills'
 import { BannerPlane } from './BannerPlane'
+import { NightSky } from './NightSky'
 import { BirdFlock } from '../../world/BirdFlock'
 
 /**
- * Chapter 3 — Highway Noon. Bleached scrub plains, milestone stones, the
- * skill hoardings, oncoming traffic, kites soaring in the white sky.
- * Movers: traffic, kites, heat shimmer (PostFX, zone-driven).
+ * Chapter 3 — Highway Night. Moonlit plains under a starry vault (stars,
+ * galaxies, shooting stars), lit hoardings, oncoming headlights, turbines
+ * blinking their beacons. Movers: traffic, the night sky, the plane.
  */
 export default function Ch3_Highway() {
   const statics = useMemo(getHighwayStatics, [])
@@ -18,6 +19,7 @@ export default function Ch3_Highway() {
   return (
     <group>
       <primitive object={statics} dispose={null} />
+      <NightSky />
       <Traffic />
       <Windmills />
       <BannerPlane />

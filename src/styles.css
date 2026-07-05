@@ -960,3 +960,27 @@ body {
     transform: translateY(0);
   }
 }
+
+/* ---- the early years read VINTAGE (ch0–3): hand-painted-poster serif ---- */
+.title-card--vintage .title-card__title {
+  font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  font-weight: 900;
+  font-variation-settings: 'opsz' 144;
+  letter-spacing: 0.005em;
+  line-height: 0.96;
+}
+
+.title-card--vintage .title-card__tagline {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-variation-settings: 'opsz' 40;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* the ch2 painted project boards share the era */
+.detour-panel--board .detour-panel__title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 900;
+  letter-spacing: 0.005em;
+}

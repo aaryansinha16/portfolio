@@ -31,10 +31,16 @@ const SCRUB_MAT = new MeshStandardMaterial({ roughness: 0.95, flatShading: true 
 const POLE_GEO = new CylinderGeometry(0.09, 0.11, 1, 6)
 const POLE_MAT = new MeshStandardMaterial({ color: '#4a4a4c', metalness: 0.4, roughness: 0.6 })
 const STONE_GEO = new BoxGeometry(0.4, 0.55, 0.16)
-const STONE_MAT = new MeshStandardMaterial({ color: '#ddd8c8', roughness: 0.85 })
+const STONE_MAT = new MeshStandardMaterial({ color: '#8a887c', roughness: 0.85 })
 const STONE_TOP_GEO = new BoxGeometry(0.42, 0.2, 0.18)
 const STONE_TOP_MAT = new MeshStandardMaterial({ color: '#c9a23a', roughness: 0.8 })
-const BOARD_BACK_MAT = new MeshStandardMaterial({ color: '#5a544a', roughness: 0.8 })
+const BOARD_BACK_MAT = new MeshStandardMaterial({ color: '#232028', roughness: 0.8 })
+const FLOOD_MAT = new MeshStandardMaterial({
+  color: '#fff3d8',
+  emissive: '#ffe9c0',
+  emissiveIntensity: 2.6,
+  toneMapped: false,
+})
 
 /**
  * Vintage roadside ad, not a spec sheet: a fat diagonal accent ribbon with a
@@ -169,8 +175,8 @@ export function getHighwayStatics(): Group {
     }
   }
   const scrub = new InstancedMesh(SCRUB_GEO, SCRUB_MAT, scrubItems.length)
-  const dryA = new Color('#8a8556')
-  const dryB = new Color('#a39a68')
+  const dryA = new Color('#3a3c33')
+  const dryB = new Color('#4a4a3c')
   scrubItems.forEach((s, i) => {
     dummy.position.set(s.x, s.y + s.h * 0.35, s.z)
     dummy.rotation.set(0, s.shade * Math.PI * 2, 0)
@@ -228,10 +234,10 @@ export function getHighwayStatics(): Group {
       new PlaneGeometry(boardW, boardH),
       new MeshStandardMaterial({
         map: texture,
-        // a whisper of self-light keeps the poster punchy in the haze
+        // the boards carry their own light now — it's night out here
         emissive: '#ffffff',
         emissiveMap: texture,
-        emissiveIntensity: 0.22,
+        emissiveIntensity: 0.85,
         roughness: 0.85,
       }),
     )
@@ -244,6 +250,24 @@ export function getHighwayStatics(): Group {
     back.rotation.copy(face.rotation)
     back.translateZ(-0.1)
     group.add(back, face)
+
+    // floodlight bar over the top edge + its two brackets — the classic
+    // lit-hoarding silhouette against the night
+    const bar = new Mesh(new BoxGeometry(boardW * 0.86, 0.12, 0.16), FLOOD_MAT)
+    bar.position.copy(face.position)
+    bar.rotation.copy(face.rotation)
+    bar.translateY(boardH / 2 + 0.34)
+    bar.translateZ(0.42)
+    group.add(bar)
+    for (const off of [-boardW * 0.32, boardW * 0.32]) {
+      const bracket = new Mesh(new BoxGeometry(0.08, 0.1, 0.6), POLE_MAT)
+      bracket.position.copy(face.position)
+      bracket.rotation.copy(face.rotation)
+      bracket.translateX(off)
+      bracket.translateY(boardH / 2 + 0.3)
+      bracket.translateZ(0.12)
+      group.add(bracket)
+    }
 
     // twin legs
     for (const off of [-boardW * 0.3, boardW * 0.3]) {

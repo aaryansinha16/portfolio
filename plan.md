@@ -151,6 +151,20 @@ great, zero console errors.
 
 ---
 
+## Round 10 — the midnight highway + vintage type (2026-07-05) — ALL DONE
+
+- [x] ch3 re-graded noon → NIGHT: deep indigo sky, moonlight key, dark plains/road,
+      night far-silhouettes; heat shimmer off; bloom now feeds zone 3
+- [x] NightSky (module-cached): ~900 twinkling shader stars on a dome, a milky-way band
+      + three tinted galaxies (additive nebula sprites), three shooting stars on
+      staggered deterministic clocks — all fading with zoneFloat distance from 3
+- [x] the hoardings light themselves: floodlight bar + brackets over each board, face
+      emissive 0.22 → 0.85; windmills get red aircraft beacons; traffic headlights
+      carry the road. Copy: "NH-48, MIDNIGHT"
+- [x] vintage type for the early years: Fraunces 900 (+ italic taglines) on ch0–3 title
+      cards and the ch2 painted-board titles; ch4+ keeps the modern display face
+- [x] deployed: Vercel (push) + GitHub Pages (pnpm deploy:pages)
+
 ## Round 9 — sound callout + GitHub Pages goes live (2026-07-05) — ALL DONE
 
 - [x] sound callout: a small dialog above the HUD sound button ("For the full immersive

@@ -50,8 +50,11 @@ function TitleCard() {
     return useJourney.subscribe((s) => s.progress, applyFromState)
   }, [chapter])
 
+  // the early years (village dirt through the night highway) wear a
+  // vintage poster serif; the city and beyond keep the modern display face
+  const vintage = chapter <= 3
   return (
-    <div ref={ref} className="title-card">
+    <div ref={ref} className={`title-card${vintage ? ' title-card--vintage' : ''}`}>
       <p className="title-card__eyebrow">{copy.eyebrow}</p>
       <h1 className="title-card__title">{copy.title}</h1>
       <p className="title-card__tagline">{copy.tagline}</p>

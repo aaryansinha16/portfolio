@@ -27,6 +27,16 @@ export function Windmills() {
             <boxGeometry args={[1.1, 1.1, 2.4]} />
             <meshStandardMaterial color="#c8cccc" roughness={0.5} metalness={0.2} />
           </mesh>
+          {/* aircraft-warning beacon — night skies demand red dots */}
+          <mesh position={[0, 0.8, -0.6]}>
+            <boxGeometry args={[0.3, 0.3, 0.3]} />
+            <meshStandardMaterial
+              color="#ff3b30"
+              emissive="#ff3b30"
+              emissiveIntensity={2.4}
+              toneMapped={false}
+            />
+          </mesh>
           <group
             ref={(el) => {
               rotors.current[i] = el

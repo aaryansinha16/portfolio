@@ -48,12 +48,13 @@ export function PostFX() {
   useFrame(() => {
     const { splineProgress } = useJourney.getState()
     const zf = zoneFloat(splineProgress)
-    // Heat shimmer peaks mid-highway (zone 3), gone by the neighbors.
-    haze.setIntensity(Math.max(0, 1 - Math.abs(zf - 3) * 1.4) * 0.9)
-    // Bloom rises through dusk (4), peaks at neon night (5), eases on the
-    // circuit (6): piecewise around the night zones.
+    // The highway runs at NIGHT now — no heat shimmer (kept for reuse).
+    haze.setIntensity(0)
+    // Bloom feeds every night zone: the starry highway (3), dusk (4),
+    // neon night (5), the circuit (6).
     if (bloomRef.current) {
       const night =
+        Math.max(0, 1 - Math.abs(zf - 3) * 0.9) * 0.5 +
         Math.max(0, 1 - Math.abs(zf - 5) * 0.75) * 0.9 +
         Math.max(0, 1 - Math.abs(zf - 6) * 1) * 0.35
       bloomRef.current.intensity = Math.min(1, night)

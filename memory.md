@@ -60,6 +60,16 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (o)** — ROUND 10: ch3 noon → midnight (config re-grade + NightSky:
+  shader-twinkle star dome, nebula sprites, shooting stars on deterministic clocks,
+  everything faded by zoneFloat proximity). Lit-hoarding kit: floodlight bar + emissive
+  face bump — any night chapter needs signage to carry its own light. LESSON: NightSky
+  first built its BufferGeometry in useMemo per mount → +1 geometry per chapter
+  roundtrip (mem probe caught it); biome-scale buffers must be module-cached like every
+  field. Fonts: Fraunces (Google Fonts) for ch0–3 DOM titles via .title-card--vintage
+  (chapter <= 3 in Overlay); canvas boards stay on system faces (webfont race). Day
+  narrative is now dawn→morning→midnight→dusk→night→circuit — stylized, owner-approved.
+
 - **2026-07-05 (n)** — ROUND 9: SoundPrompt (callout above HUD; CTA click IS the audio
   activation gesture; dismisses on any interaction incl. wheel so verify shots stay
   clean). GitHub Pages: aaryansinha16.github.io repo now holds BUILT output only (old
