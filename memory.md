@@ -60,6 +60,23 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (g)** — POLISH ROUND 2 (owner re-review: "still broken" items). Real root
+  causes this time: (1) traffic jerk was ZoneRoad.at() NEAREST-SAMPLE snapping (4m grid) —
+  movers need road.sample() lerp, statics can keep at(); (2) town floaters were an AXIS
+  SWAP — box rotation.y=atan2(tx,tz) puts local X PERPENDICULAR to the street, the code
+  spread windows "along the facade" down local X → slabs hung in air; rebuilt the loop on
+  explicit (tangent, outward-normal) basis vectors. (3) autopilot died to trackpad inertia
+  (single lenis tween + once-per-session arm) → per-tick immediate scrollTo from the gsap
+  ticker, cancel on input, re-arm on leaving ch6; verify cancels it with a zero-delta
+  WheelEvent nudge. (4) cliff dive: pointPastEnd() extrapolation; camera must RISE (+6.5m)
+  during the dive or the lip occludes everything below the edge. (5) additive ribbon was
+  invisible: winding mirrored vs the road builder → DoubleSide on thin FX ribbons, always.
+  Also: hoardings/city boards got real canvas painters (ribbon+numeral+chip / era+progress
+  bar), gantries over the road, showroom is a 96m slow-mo drive-through (detour spanMeters,
+  ADR-16). Verify green: 60.2×3 fps, textures 79→79, autopilot probe asserts self-drive.
+  NOTE: fps gate flaked once (49.3 @ village) purely from host load — re-probe before
+  chasing ghosts.
+
 - **2026-07-05 (f)** — POLISH ROUND (owner's 10 points) COMPLETE. Bugs: traffic frame-skip
   was stale instanced bounding spheres (frustumCulled=false); roadside flicker was road/
   terrain z-fight (deck→8cm) + shadow texel crawl (snap light target to 0.5m grid); vehicle

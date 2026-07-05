@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry, Color, Vector3 } from 'three'
-import { roadCurve, totalLength } from './roadPath'
+import { CLIFF_START_M, roadCurve, totalLength } from './roadPath'
 import { createRng } from '../../utils/random'
 import { zoneFloat } from '../atmosphere/ColorScript'
 import { CHAPTERS } from '../chapters/registry'
@@ -31,8 +31,11 @@ export function buildRoadGeometry(segments = 1600): BufferGeometry {
   const tints = CHAPTERS.map((c) => new Color(c.config.env.roadTint))
   const tint = new Color()
 
+  // the deck stops AT the cliff edge — past it there is only the fall
+  const pEnd = CLIFF_START_M / totalLength
+
   for (let i = 0; i <= segments; i++) {
-    const p = i / segments
+    const p = (i / segments) * pEnd
     roadCurve.getPointAt(p, point)
     roadCurve.getTangentAt(p, tangent)
 

@@ -1,10 +1,12 @@
 import {
   BoxGeometry,
+  CanvasTexture,
   CylinderGeometry,
   Group,
   InstancedMesh,
   MeshStandardMaterial,
   Object3D,
+  SRGBColorSpace,
   Vector3,
 } from 'three'
 import { Mesh, PlaneGeometry } from 'three'
@@ -12,7 +14,84 @@ import { getZoneRoad } from '../../world/roadSamples'
 import { buildTowerMesh, buildWindowMesh, genTowers } from '../../world/towers'
 import { makeTextPanel } from '../../world/textPanel'
 import { createRng, rngRange } from '../../../utils/random'
-import { CITY_BILLBOARDS } from '../../../content'
+import { CITY_BILLBOARDS, CITY_GANTRIES } from '../../../content'
+
+/**
+ * A career-chapter billboard: era chip, huge glowing title, payoff line, and
+ * a timeline bar showing where this stop sits in the whole arc — denser than
+ * a bare title+sub panel, and it reads at a glance while driving.
+ */
+function drawCareerBoard(
+  bb: { era: string; title: string; sub: string; color: string },
+  index: number,
+  total: number,
+): CanvasTexture {
+  const w = 1024
+  const h = 512
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')!
+
+  ctx.fillStyle = '#0d1126'
+  ctx.fillRect(0, 0, w, h)
+  // faint scanlines — these screens glitch, they should look like screens
+  ctx.fillStyle = 'rgba(255,255,255,0.028)'
+  for (let y = 0; y < h; y += 7) ctx.fillRect(0, y, w, 2)
+  ctx.strokeStyle = `${bb.color}55`
+  ctx.lineWidth = 6
+  ctx.strokeRect(10, 10, w - 20, h - 20)
+
+  // era chip
+  ctx.fillStyle = bb.color
+  ctx.font = "900 44px 'Courier New', monospace"
+  const eraW = ctx.measureText(bb.era).width + 48
+  ctx.fillRect(48, 46, eraW, 72)
+  ctx.fillStyle = '#0d1126'
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(bb.era, 72, 86)
+
+  // title — glowing, auto-fit
+  let size = 128
+  ctx.font = `900 ${size}px 'Arial Narrow', 'Arial Black', sans-serif`
+  while (size > 56 && ctx.measureText(bb.title).width > w - 110) {
+    size -= 4
+    ctx.font = `900 ${size}px 'Arial Narrow', 'Arial Black', sans-serif`
+  }
+  ctx.fillStyle = bb.color
+  ctx.shadowColor = bb.color
+  ctx.shadowBlur = 42
+  ctx.fillText(bb.title, 52, 232)
+  ctx.shadowBlur = 14
+  ctx.fillText(bb.title, 52, 232)
+  ctx.shadowBlur = 0
+
+  // payoff line
+  ctx.fillStyle = '#c9d2e4'
+  let subSize = 46
+  ctx.font = `500 ${subSize}px 'Helvetica Neue', Arial, sans-serif`
+  while (subSize > 26 && ctx.measureText(bb.sub).width > w - 110) {
+    subSize -= 2
+    ctx.font = `500 ${subSize}px 'Helvetica Neue', Arial, sans-serif`
+  }
+  ctx.fillText(bb.sub, 54, 330)
+
+  // the arc so far — timeline bar + position label
+  const barY = h - 88
+  ctx.fillStyle = 'rgba(201,210,228,0.18)'
+  ctx.fillRect(54, barY, w - 300, 10)
+  ctx.fillStyle = bb.color
+  ctx.fillRect(54, barY, (w - 300) * ((index + 1) / total), 10)
+  ctx.font = "700 40px 'Courier New', monospace"
+  ctx.textAlign = 'right'
+  ctx.fillText(`${index + 1} / ${total}`, w - 54, barY + 6)
+
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  texture.anisotropy = 4
+  return texture
+}
 
 /**
  * Ch4 City statics: dusk towers with lit window grids, sodium streetlights,
@@ -194,87 +273,131 @@ export function getCityStatics(): Group {
   lights.instanceMatrix.needsUpdate = true
   group.add(lights)
 
-  /* the career arc — big billboards mounted on road-facing tower faces,
-     spread through the zone (owner: ch4 is the experience chapter) */
+  /* the career arc — big billboards hung LOW on road-facing tower faces
+     (owner: eye level, not rooftops), plus two gantries spanning the road.
+     Every mount picks the face by dot(normal, toRoad) and uses THAT face's
+     half-extent — max(w,d)/2 left boards floating off the narrow faces. */
   {
-    const usable = towers.filter((t) => {
-      const s2 = road.at(0)
-      void s2
-      return t.h > 22
-    })
+    const usable = towers.filter((t) => t.h > 17)
     CITY_BILLBOARDS.forEach((bb, i) => {
       const targetM = 28 + (i * (road.zoneMeters - TUNNEL_LEN - 70)) / (CITY_BILLBOARDS.length - 1)
-      // nearest tall tower to the target position
-      let best = usable[0]
+      // nearest usable tower to the target position
+      let best: (typeof usable)[number] | null = null
       let bestD = Infinity
       road.place(targetM, 0, pos)
       const rx = pos.x
       const rz = pos.z
       for (const t of usable) {
         const d = Math.hypot(t.x - rx, t.z - rz)
-        if (d < bestD && d < 55) {
+        if (d < bestD && d < 48) {
           bestD = d
           best = t
         }
       }
       if (!best) return
-      // face whose normal points back toward the road
       const toRoadX = rx - best.x
       const toRoadZ = rz - best.z
-      const candidates = [
-        best.yaw + Math.PI / 2,
-        best.yaw - Math.PI / 2,
-        best.yaw,
-        best.yaw + Math.PI,
+      // candidate faces carry their own normal AND half-extent
+      const candidates: Array<[number, number]> = [
+        [best.yaw, best.d / 2],
+        [best.yaw + Math.PI, best.d / 2],
+        [best.yaw + Math.PI / 2, best.w / 2],
+        [best.yaw - Math.PI / 2, best.w / 2],
       ]
-      let faceYaw = candidates[0]
+      let faceYaw = candidates[0][0]
+      let halfDepth = candidates[0][1]
       let bestDot = -Infinity
-      for (const cy of candidates) {
+      for (const [cy, half] of candidates) {
         const dot = Math.sin(cy) * toRoadX + Math.cos(cy) * toRoadZ
         if (dot > bestDot) {
           bestDot = dot
           faceYaw = cy
+          halfDepth = half
         }
       }
       const nx = Math.sin(faceYaw)
       const nz = Math.cos(faceYaw)
-      const halfDepth = Math.max(best.w, best.d) / 2
 
-      const tex = makeTextPanel({
-        title: bb.title,
-        sub: `${bb.era} · ${bb.sub}`,
-        bg: '#12162a',
-        fg: bb.color,
-        glow: true,
-        border: `${bb.color}55`,
-        w: 896,
-        h: 384,
-      })
+      const tex = drawCareerBoard(bb, i, CITY_BILLBOARDS.length)
       const mat = new MeshStandardMaterial({
         color: '#000000',
         emissive: '#ffffff',
         emissiveMap: tex,
         map: tex,
-        emissiveIntensity: 1.5,
+        emissiveIntensity: 1.6,
         roughness: 0.7,
         toneMapped: false,
       })
       if (i % 2 === 1) BILLBOARD_FLICKER_MATS.push(mat)
-      const boardW = 12
-      const boardH = 5.6
-      const boardY = Math.min(best.h - 4, 16 + (i % 3) * 4)
+      const boardW = 15
+      const boardH = 7.4
+      const boardY = Math.min(best.h - boardH / 2 - 1.2, 9.6 + (i % 2) * 3.4)
       const face = new Mesh(new PlaneGeometry(boardW, boardH), mat)
       face.position.set(
-        best.x + nx * (halfDepth + 0.25),
+        best.x + nx * (halfDepth + 0.3),
         best.y + boardY,
-        best.z + nz * (halfDepth + 0.25),
+        best.z + nz * (halfDepth + 0.3),
       )
       face.rotation.y = faceYaw
-      const backing = new Mesh(new PlaneGeometry(boardW + 0.7, boardH + 0.7), CONCRETE_MAT)
+      const backing = new Mesh(new PlaneGeometry(boardW + 0.8, boardH + 0.8), CONCRETE_MAT)
       backing.position.copy(face.position)
       backing.rotation.y = faceYaw
       backing.translateZ(-0.08)
       group.add(backing, face)
+    })
+
+    /* gantries — you drive right under these; unmissable career copy */
+    CITY_GANTRIES.forEach((g, gi) => {
+      const m = road.zoneMeters * (gi === 0 ? 0.24 : 0.58)
+      const s = road.at(m)
+      const yaw = Math.atan2(s.tx, s.tz)
+      const steel = new MeshStandardMaterial({ color: '#23232c', metalness: 0.5, roughness: 0.5 })
+      for (const side of [-1, 1]) {
+        road.place(m, 6.8 * side, pos)
+        const post = new Mesh(BOX, steel)
+        post.position.set(pos.x, pos.y + 3.9, pos.z)
+        post.rotation.y = yaw
+        post.scale.set(0.5, 7.8, 0.5)
+        post.castShadow = true
+        group.add(post)
+      }
+      road.place(m, 0, pos)
+      const beam = new Mesh(BOX, steel)
+      beam.position.set(pos.x, pos.y + 7.7, pos.z)
+      beam.rotation.y = yaw
+      beam.scale.set(14.4, 0.75, 0.75)
+      group.add(beam)
+
+      const tex = makeTextPanel({
+        title: g.title,
+        sub: g.sub,
+        bg: '#10142a',
+        fg: g.color,
+        glow: true,
+        border: `${g.color}44`,
+        w: 1024,
+        h: 232,
+      })
+      const panelMat = new MeshStandardMaterial({
+        color: '#000000',
+        emissive: '#ffffff',
+        emissiveMap: tex,
+        map: tex,
+        emissiveIntensity: 1.8,
+        roughness: 0.6,
+        toneMapped: false,
+      })
+      if (gi === 1) BILLBOARD_FLICKER_MATS.push(panelMat)
+      const panel = new Mesh(new PlaneGeometry(12.6, 2.85), panelMat)
+      // face BACK toward the approaching driver (single-sided plane)
+      panel.position.set(pos.x, pos.y + 5.9, pos.z)
+      panel.rotation.y = yaw + Math.PI
+      const panelBack = new Mesh(BOX, CONCRETE_MAT)
+      panelBack.position.copy(panel.position)
+      panelBack.rotation.y = panel.rotation.y
+      panelBack.scale.set(12.9, 3.1, 0.16)
+      panelBack.translateZ(-0.12)
+      group.add(panelBack, panel)
     })
   }
 

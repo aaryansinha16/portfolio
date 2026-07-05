@@ -149,3 +149,29 @@ export function pointAt(p: number, target: Vector3): Vector3 {
 export function tangentAt(p: number, target: Vector3): Vector3 {
   return roadCurve.getTangentAt(_clamped(p), target)
 }
+
+/* ---------------- the cliff (the finale's full stop) ----------------
+ * The board is TORN OFF this many meters before the spline's end; the road
+ * deck, dashes and PCB all stop at the edge. The vehicle may travel past it —
+ * pointPastEnd extrapolates along the end tangent and drops it on a parabola,
+ * all a pure function of meters, so scrolling back up reverses the fall. */
+
+export const CLIFF_START_M = totalLength - 10
+/** how far past the edge the ride is allowed to fly before it hangs */
+export const CLIFF_MAX_OVER = 14
+
+const _edgePoint = new Vector3()
+const _edgeDir = new Vector3()
+roadCurve.getPointAt(CLIFF_START_M / totalLength, _edgePoint)
+roadCurve.getTangentAt(CLIFF_START_M / totalLength, _edgeDir)
+
+/** Like pointAt (in METERS), but continues past the cliff edge into the
+ * dive. No cap here — callers clamp their own travel (the vehicle hangs at
+ * CLIFF_MAX_OVER) so look-ahead targets can run a few meters further. */
+export function pointPastEnd(m: number, target: Vector3): Vector3 {
+  if (m <= CLIFF_START_M) return pointAt(m / totalLength, target)
+  const over = m - CLIFF_START_M
+  target.copy(_edgePoint).addScaledVector(_edgeDir, over)
+  target.y -= 0.048 * over * over
+  return target
+}

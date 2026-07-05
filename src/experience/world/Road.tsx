@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { InstancedMesh, Object3D } from 'three'
 import { buildRoadGeometry } from '../spline/roadGeometry'
-import { metersToProgress, pointAt, tangentAt, totalLength } from '../spline/roadPath'
+import { CLIFF_START_M, metersToProgress, pointAt, tangentAt } from '../spline/roadPath'
 import { createScratch } from '../../utils/scratch'
 
 /** The asphalt ribbon for the whole journey — one draw call. */
@@ -22,7 +22,7 @@ const dummy = new Object3D()
 /** Instanced centerline dashes — cheap world-scale motion cue. */
 export function Dashes() {
   const ref = useRef<InstancedMesh>(null)
-  const count = Math.floor(totalLength / DASH_EVERY)
+  const count = Math.floor((CLIFF_START_M - DASH_EVERY / 2) / DASH_EVERY)
 
   useLayoutEffect(() => {
     const mesh = ref.current

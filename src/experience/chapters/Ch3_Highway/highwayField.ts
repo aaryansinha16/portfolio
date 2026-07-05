@@ -1,5 +1,6 @@
 import {
   BoxGeometry,
+  CanvasTexture,
   Color,
   CylinderGeometry,
   Group,
@@ -9,10 +10,10 @@ import {
   MeshStandardMaterial,
   Object3D,
   PlaneGeometry,
+  SRGBColorSpace,
   Vector3,
 } from 'three'
 import { getZoneRoad } from '../../world/roadSamples'
-import { makeTextPanel } from '../../world/textPanel'
 import { createRng, rngRange } from '../../../utils/random'
 import { SKILL_BOARDS } from '../../../content'
 
@@ -34,6 +35,98 @@ const STONE_MAT = new MeshStandardMaterial({ color: '#ddd8c8', roughness: 0.85 }
 const STONE_TOP_GEO = new BoxGeometry(0.42, 0.2, 0.18)
 const STONE_TOP_MAT = new MeshStandardMaterial({ color: '#c9a23a', roughness: 0.8 })
 const BOARD_BACK_MAT = new MeshStandardMaterial({ color: '#5a544a', roughness: 0.8 })
+
+/**
+ * Vintage roadside ad, not a spec sheet: a fat diagonal accent ribbon with a
+ * giant numeral, a headline sized to FILL the board (split on '·' so each
+ * line gets huge), and the payoff line in a dark chip. Weathered, loud.
+ */
+function drawAdBoard(title: string, sub: string, accent: string, index: number): CanvasTexture {
+  const w = 1024
+  const h = 448
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')!
+
+  ctx.fillStyle = '#f6efdc'
+  ctx.fillRect(0, 0, w, h)
+
+  // diagonal accent ribbon with a giant index numeral
+  ctx.fillStyle = accent
+  ctx.beginPath()
+  ctx.moveTo(0, 0)
+  ctx.lineTo(280, 0)
+  ctx.lineTo(175, h)
+  ctx.lineTo(0, h)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'
+  ctx.font = "900 300px 'Arial Black', Arial, sans-serif"
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(String(index + 1).padStart(2, '0'), 140, h * 0.52)
+
+  // headline: up to two lines, each auto-sized to fill the text area
+  const lines: string[] = (() => {
+    const parts = title.split('·').map((p) => p.trim())
+    if (parts.length < 2 || title.length <= 13) return [title]
+    const mid = Math.ceil(parts.length / 2)
+    return [parts.slice(0, mid).join(' · '), parts.slice(mid).join(' · ')]
+  })()
+  const textX = 330
+  const textW = w - textX - 48
+  ctx.fillStyle = '#211d16'
+  ctx.textAlign = 'left'
+  const lineY = lines.length === 2 ? [128, 248] : [176]
+  lines.forEach((line, li) => {
+    let size = lines.length === 2 ? 120 : 132
+    ctx.font = `900 ${size}px 'Arial Narrow', 'Arial Black', sans-serif`
+    while (size > 44 && ctx.measureText(line).width > textW) {
+      size -= 4
+      ctx.font = `900 ${size}px 'Arial Narrow', 'Arial Black', sans-serif`
+    }
+    ctx.fillText(line, textX, lineY[li])
+  })
+
+  // payoff chip
+  ctx.fillStyle = '#211d16'
+  const chipY = h - 108
+  ctx.fillRect(textX, chipY, textW, 66)
+  ctx.fillStyle = '#f6efdc'
+  let subSize = 36
+  ctx.font = `700 ${subSize}px 'Arial Narrow', Arial, sans-serif`
+  while (subSize > 20 && ctx.measureText(sub.toUpperCase()).width > textW - 40) {
+    subSize -= 2
+    ctx.font = `700 ${subSize}px 'Arial Narrow', Arial, sans-serif`
+  }
+  ctx.fillText(sub.toUpperCase(), textX + 20, chipY + 34)
+
+  // frame + mono tag
+  ctx.strokeStyle = '#211d16'
+  ctx.lineWidth = 10
+  ctx.strokeRect(5, 5, w - 10, h - 10)
+  ctx.strokeStyle = accent
+  ctx.lineWidth = 3
+  ctx.strokeRect(18, 18, w - 36, h - 36)
+  ctx.fillStyle = 'rgba(33,29,22,0.55)'
+  ctx.font = "700 22px 'Courier New', monospace"
+  ctx.fillText(`NH-48 · AD SPACE Nº${index + 1}`, textX, 52)
+
+  // years of sun
+  ctx.fillStyle = 'rgba(232,226,208,0.14)'
+  ctx.fillRect(0, 0, w, h)
+  ctx.fillStyle = 'rgba(60,52,40,0.06)'
+  for (let i = 0; i < 6; i++) {
+    const x = ((i * 173) % w) + 6
+    ctx.fillRect(x, 0, 8 + ((i * 37) % 16), h)
+  }
+
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  texture.anisotropy = 4
+  return texture
+}
 
 const dummy = new Object3D()
 let cachedGroup: Group | null = null
@@ -115,7 +208,8 @@ export function getHighwayStatics(): Group {
   stones.castShadow = true
   group.add(stones, stoneTops)
 
-  /* skill hoardings — alternating sides, angled a touch toward the road */
+  /* skill hoardings — big vintage AD-SPACE posters, angled and tipped
+     toward the road so they punch through the noon haze */
   const poleTransforms: { x: number; y: number; z: number; h: number; yaw: number }[] = []
   SKILL_BOARDS.forEach((board, i) => {
     const m = 55 + (i * (road.zoneMeters - 110)) / (SKILL_BOARDS.length - 1)
@@ -123,37 +217,36 @@ export function getHighwayStatics(): Group {
     const lateral = rngRange(rng, 10.5, 12.5) * side
     const s = road.at(m)
     road.place(m, lateral, pos)
-    const yaw = Math.atan2(s.tx, s.tz) + Math.PI + side * -0.22 // face oncoming viewers
+    const yaw = Math.atan2(s.tx, s.tz) + Math.PI + side * -0.24 // face oncoming viewers
 
-    const boardW = 9.6
-    const boardH = 4.4
-    const boardY = 6.2
+    const boardW = 13
+    const boardH = 5.7
+    const boardY = 6.6
 
-    const texture = makeTextPanel({
-      title: board.title,
-      sub: board.sub,
-      bg: '#ece5d0',
-      fg: '#26241f',
-      accentBar: board.accent,
-      bleach: 0.35,
-      w: 768,
-      h: 352,
-    })
+    const texture = drawAdBoard(board.title, board.sub, board.accent, i)
     const face = new Mesh(
       new PlaneGeometry(boardW, boardH),
-      new MeshStandardMaterial({ map: texture, roughness: 0.85 }),
+      new MeshStandardMaterial({
+        map: texture,
+        // a whisper of self-light keeps the poster punchy in the haze
+        emissive: '#ffffff',
+        emissiveMap: texture,
+        emissiveIntensity: 0.22,
+        roughness: 0.85,
+      }),
     )
     face.position.set(pos.x, pos.y + boardY, pos.z)
     face.rotation.y = yaw
+    face.rotateX(0.06) // tip the top toward the viewer, billboard-style
     face.castShadow = true
-    const back = new Mesh(new BoxGeometry(boardW, boardH, 0.12), BOARD_BACK_MAT)
+    const back = new Mesh(new BoxGeometry(boardW + 0.3, boardH + 0.3, 0.14), BOARD_BACK_MAT)
     back.position.copy(face.position)
-    back.rotation.y = yaw
-    back.translateZ(-0.08)
+    back.rotation.copy(face.rotation)
+    back.translateZ(-0.1)
     group.add(back, face)
 
     // twin legs
-    for (const off of [-boardW * 0.32, boardW * 0.32]) {
+    for (const off of [-boardW * 0.3, boardW * 0.3]) {
       const leg = new Vector3(pos.x, pos.y, pos.z)
       leg.x += Math.cos(yaw) * off
       leg.z -= Math.sin(yaw) * off

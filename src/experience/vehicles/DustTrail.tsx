@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { InstancedMesh, MeshBasicMaterial, Object3D, Vector3 } from 'three'
-import { pointAt, tangentAt, totalLength } from '../spline/roadPath'
+import { CLIFF_START_M, pointAt, tangentAt, totalLength } from '../spline/roadPath'
 import { frameEnv, vehicleProgressAt } from '../atmosphere/ColorScript'
 import { useJourney } from '../../state/useJourney'
 import { clamp01, smoothstep } from '../../utils/math'
@@ -56,7 +56,8 @@ export function DustTrail() {
 
     material.color.copy(frameEnv.fogColor).multiplyScalar(1.08)
 
-    const p = vehicleProgressAt(splineProgress)
+    // never kick dust past the cliff — the wheels leave the board there
+    const p = Math.min(vehicleProgressAt(splineProgress), CLIFF_START_M / totalLength)
     const t = clock.elapsedTime
     for (let i = 0; i < COUNT; i++) {
       const life = (t * 0.85 + i / COUNT) % 1

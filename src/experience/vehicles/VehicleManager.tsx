@@ -1,7 +1,15 @@
 import { useMemo, useRef, type ComponentType } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Group, PointLight } from 'three'
-import { CHAPTER_MARKS, pointAt, tangentAt, totalLength } from '../spline/roadPath'
+import {
+  CHAPTER_MARKS,
+  CLIFF_MAX_OVER,
+  CLIFF_START_M,
+  pointAt,
+  pointPastEnd,
+  tangentAt,
+  totalLength,
+} from '../spline/roadPath'
 import { vehicleProgressAt } from '../atmosphere/ColorScript'
 import { useJourney } from '../../state/useJourney'
 import { clamp, clamp01, damp, smoothstep } from '../../utils/math'
@@ -136,9 +144,9 @@ function stateFor(def: VehicleDef, m: number, out: VState): VState {
       return out
     }
   }
-  // stop a hair short of the spline's end — at the exact endpoint the
-  // look-ahead degenerates (lookAt of its own position flips the vehicle)
-  out.along = Math.min(m, totalLength - 4.5)
+  // the finale: the road ends at the cliff and the ride sails past the
+  // edge into the dive (pointPastEnd extrapolates; scroll-up reverses it)
+  out.along = Math.min(m, CLIFF_START_M + CLIFF_MAX_OVER)
   out.lateral = 0
   out.speedScale = 1
   out.parkedT = 0
@@ -168,7 +176,7 @@ function ChoreoVehicle({ def }: { def: VehicleDef }) {
 
     const { v1: pos, v2: ahead, v3: right, v4: tangent } = scratch
 
-    pointAt(sNow.along / totalLength, pos)
+    pointPastEnd(sNow.along, pos)
     tangentAt(sNow.along / totalLength, tangent)
     right.set(-tangent.z, 0, tangent.x).normalize()
     pos.addScaledVector(right, sNow.lateral)
@@ -177,7 +185,9 @@ function ChoreoVehicle({ def }: { def: VehicleDef }) {
 
     // Heading: 3m ahead along the choreography (lateral from the ahead
     // state so merges/pull-offs angle the nose; parked stays road-parallel).
-    pointAt((sNow.along + 3) / totalLength, ahead)
+    // Past the cliff both points extrapolate into the dive, so the nose
+    // pitches down naturally as the parabola steepens.
+    pointPastEnd(sNow.along + 3, ahead)
     tangentAt((sNow.along + 3) / totalLength, tangent)
     right.set(-tangent.z, 0, tangent.x).normalize()
     ahead.addScaledVector(right, sAhead.lateral)
@@ -185,6 +195,9 @@ function ChoreoVehicle({ def }: { def: VehicleDef }) {
     group.lookAt(ahead)
     // Parked rides sit nosed slightly into the shoulder, not lane-parallel.
     if (sNow.parkedT > 0.01) group.rotateY(0.12 * sNow.parkedT)
+    // Past the edge: a slow, weight-shifting roll into the fall.
+    const over = sNow.along - CLIFF_START_M
+    if (over > 0) group.rotateZ(0.12 * clamp01(over / CLIFF_MAX_OVER))
 
     const body = bodyRef.current
     if (!body || reducedMotion) return

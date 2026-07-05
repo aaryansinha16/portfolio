@@ -151,6 +151,44 @@ great, zero console errors.
 
 ---
 
+## Polish round 2 — owner feedback on the first pass (2026-07-05) — ALL DONE
+
+- [x] 1: town elements STILL floating — root cause found: the facade code treated a
+      yaw-rotated box's local X as "along the street" when it is perpendicular. Whole
+      building loop rebuilt on explicit basis vectors (tangent + outward normal); windows
+      became glass + sill + lintel; signs/graffiti planes now face the road on both sides
+- [x] 2a: oncoming traffic STILL skipped frames — real cause: ZoneRoad.at() snaps to the
+      4m sample grid, so movers teleported in 4m steps. Added road.sample() (lerped
+      position + tangent); traffic now glides
+- [x] 2b: traffic vehicles = 2 blocks — rebuilt as merged vertex-colored classes
+      (sedan/hatch/lorry/bus) with hoods, cabins, glass, bumpers, wheels + a basic-material
+      light pass; 1 body + 1 light draw call per class, DynamicDrawUsage
+- [x] 2c: ch3 hoardings boring — vintage AD-SPACE posters: diagonal accent ribbon, giant
+      numeral, auto-fit headline, payoff chip, weathering; 13×5.7m, tipped toward the road,
+      slight self-light
+- [x] 3: ch1 sign text invisible in dawn shade — boards enlarged (2.3m), brighter paint,
+      emissiveMap lift 0.42, twin posts, pulled closer to the shoulder
+- [x] 4: ch4 boards too high / too sparse — hung at 9.6–12.4m on the road-facing face
+      (per-face half-extent fixed: max(w,d)/2 floated boards off narrow faces), 15×7.4m,
+      denser painter (era chip, glow title, payoff, career progress bar i/7) + two gantries
+      spanning the road you drive under
+- [x] 5: neon strips on the road made no sense — the wet-road streak planes deleted;
+      NeonRoadFlow added: cyan/magenta lines hugging both road edges with pulses streaming
+      in the travel direction
+- [x] 6: ch5 boards too close together + vehicle stopped — detours now support spanMeters:
+      the showroom window covers 96m of road in slow motion (~30% cruise speed); the four
+      clickable boards spread ~27m apart along the run
+- [x] 7: autopilot "not implemented" — v1 was one long lenis tween: any trackpad inertia
+      cancelled it, and it armed once per session. Now per-tick immediate scrollTo steps
+      driven from the gsap ticker, eased ramp-in, cancelled by real input, re-armed on
+      leaving ch6
+- [x] 8: cliff ending — the road/board/dashes stop 10m short of the spline end (torn-lip
+      slabs, glowing trace stubs, warning LEDs, silkscreen "END OF ROAD"); past the edge
+      pointPastEnd() extrapolates along the end tangent with a parabolic drop, the ride
+      sails off nose-down with a slow roll, and the camera rises 6.5m during the dive to
+      watch over the lip. All of it a pure function of scroll — scrolling up reverses the
+      fall
+
 ## Polish round — owner feedback (2026-07-05) — ALL DONE
 
 - [x] 1+9+10: per-vehicle audio voices crossfaded at swap boundaries (bicycle = freewheel

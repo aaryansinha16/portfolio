@@ -30,9 +30,12 @@ const STOPS = [
   ['03-highway', 0.42],
   ['s3-swap-safari', 0.5062],
   ['04-city', 0.58],
+  ['04b-city-gantry', 0.549],
   ['05-neon', 0.74],
+  ['05b-neon-early', 0.7],
   ['06-circuit', 0.93],
   ['07-contact', 0.975],
+  ['08-cliff-dive', 1.0],
 ]
 
 const browser = await chromium.launch({
@@ -70,15 +73,38 @@ detours.forEach((d, i) => {
 })
 allStops.sort((a, b) => a[1] - b[1])
 
+// a zero-delta wheel "nudge" cancels the ch6 autopilot without moving lenis —
+// probes must own the scroll position, not fight the self-driving finale
+const nudge = (pg) =>
+  pg.evaluate(() => window.dispatchEvent(new WheelEvent('wheel', { deltaY: 0 })))
+
 for (const [name, frac] of allStops) {
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * frac))
+  await nudge(page)
   await page.waitForTimeout(2200) // scrub 0.8s + lenis settle
+  await nudge(page)
+  await page.waitForTimeout(400)
   await page.screenshot({ path: `${OUT}${name}.png` })
   const eyebrow = await page.evaluate(
     () => document.querySelector('.title-card__eyebrow')?.textContent ?? null,
   )
   console.log(`${name}: eyebrow="${eyebrow}"`)
 }
+
+// ---- autopilot probe: enter ch6 fresh and confirm the ride drives itself
+await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * 0.79))
+await nudge(page)
+await page.waitForTimeout(1800)
+await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * 0.845))
+await page.waitForTimeout(1600) // arm delay + ramp-in
+const apA = await page.evaluate(() => window.scrollY)
+await page.waitForTimeout(3500)
+const apB = await page.evaluate(() => window.scrollY)
+console.log(
+  `autopilot: scroll ${Math.round(apA)} → ${Math.round(apB)} ${apB - apA > 120 ? '(self-driving ✓)' : '(NOT MOVING ✗)'}`,
+)
+const apOk = apB - apA > 120
+await nudge(page)
 
 // FPS is measured on a SEPARATE Retina-like page (deviceScaleFactor 2 +
 // 2x CPU throttle). Measuring at dsf 1 hid a real ~35fps regression once —
@@ -148,6 +174,7 @@ const glInfo = () =>
 const roundtrip = async () => {
   for (const f of [0.25, 0.5, 0.75, 1, 0.75, 0.5, 0.25, 0]) {
     await memPage.evaluate((y) => window.scrollTo(0, y), Math.round(memScroll * f))
+    await nudge(memPage)
     await memPage.waitForTimeout(900)
   }
 }
@@ -173,5 +200,6 @@ console.log(`console errors: ${errors.length}`)
 errors.slice(0, 10).forEach((e) => console.log('ERR:', e.slice(0, 240)))
 console.log(`GL warnings: ${glWarnings}`)
 if (minFps < 50) console.log(`FPS GATE FAILED: min ${minFps.toFixed(1)} < 50 (dpr2, cpu2x)`)
+if (!apOk) console.log('AUTOPILOT GATE FAILED: ch6 did not self-drive')
 await browser.close()
-process.exit(errors.length > 0 || glWarnings > 0 || minFps < 50 ? 1 : 0)
+process.exit(errors.length > 0 || glWarnings > 0 || minFps < 50 || !apOk ? 1 : 0)

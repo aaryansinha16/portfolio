@@ -54,7 +54,10 @@ export function getBoardFrame(): BoardFrame {
       break
     }
   }
-  const endM = road.zoneMeters + 24
+  // the board is TORN OFF at the cliff (roadPath.CLIFF_START_M, which is
+  // totalLength - 10 — the same line in zone meters). Everything on the
+  // board stays behind this edge.
+  const endM = road.zoneMeters - 10
   boardFrame = { road, startM: startM + 6, endM, length: endM - startM - 6 }
   return boardFrame
 }
@@ -145,11 +148,13 @@ export function getCircuitStatics(): Group {
   const group = new Group()
   const pos = new Vector3()
 
-  /* the board itself — replaces the old greybox plane */
-  const midM = (bf.startM + bf.endM) / 2
+  /* the board itself — runs from behind the ramp crest and STOPS at the
+     cliff edge; past it there is only the void */
+  const boardFrom = bf.startM - 60
+  const midM = (boardFrom + bf.endM) / 2
   const s = road.at(midM)
   const board = new Mesh(
-    new PlaneGeometry(300, bf.length + 120),
+    new PlaneGeometry(300, bf.endM - boardFrom),
     new MeshStandardMaterial({
       color: '#04150d',
       emissive: '#0f3d2e',
@@ -163,6 +168,113 @@ export function getCircuitStatics(): Group {
   board.rotation.set(-Math.PI / 2, 0, Math.atan2(s.tx, s.tz))
   board.receiveShadow = true
   group.add(board)
+
+  /* the cliff — the board's torn edge and the drop below it */
+  {
+    const sE = road.at(bf.endM)
+    const yawE = Math.atan2(sE.tx, sE.tz)
+    // the sheared face below the lip
+    const face = new Mesh(
+      new BoxGeometry(300, 44, 2.4),
+      new MeshStandardMaterial({ color: '#03100a', roughness: 0.95 }),
+    )
+    road.place(bf.endM - 1.2, 0, pos)
+    face.position.set(pos.x, BOARD_Y - 22, pos.z)
+    face.rotation.y = yawE
+    group.add(face)
+
+    // torn-substrate lip: ragged slabs along the break line
+    const LIP_MAT = new MeshStandardMaterial({ color: '#062015', roughness: 0.85 })
+    const lipCount = 16
+    const lips = new InstancedMesh(new BoxGeometry(1, 1, 1), LIP_MAT, lipCount)
+    for (let i = 0; i < lipCount; i++) {
+      const lat = -45 + (i / (lipCount - 1)) * 90 + rngRange(rng, -2, 2)
+      road.place(bf.endM + rngRange(rng, -0.4, 1.3), lat, pos)
+      dummy.position.set(pos.x, BOARD_Y + 0.02, pos.z)
+      dummy.rotation.set(0, yawE + rngRange(rng, -0.3, 0.3), 0)
+      dummy.scale.set(rngRange(rng, 2, 4.5), 0.16, rngRange(rng, 0.8, 2.2))
+      dummy.updateMatrix()
+      lips.setMatrixAt(i, dummy.matrix)
+    }
+    lips.instanceMatrix.needsUpdate = true
+    group.add(lips)
+
+    // torn traces glowing at the break, poking over the void
+    const STUB_MAT = new MeshStandardMaterial({
+      color: '#0a2a1f',
+      emissive: '#39ff88',
+      emissiveIntensity: 1.9,
+      toneMapped: false,
+    })
+    const stubs = new InstancedMesh(new BoxGeometry(1, 1, 1), STUB_MAT, 8)
+    for (let i = 0; i < 8; i++) {
+      const lat = rngRange(rng, -40, 40)
+      road.place(bf.endM + rngRange(rng, 0.3, 1.6), lat, pos)
+      dummy.position.set(pos.x, BOARD_Y + 0.06, pos.z)
+      dummy.rotation.set(0, yawE + rngRange(rng, -0.12, 0.12), 0)
+      dummy.scale.set(0.5, 0.07, rngRange(rng, 1.2, 2.6))
+      dummy.updateMatrix()
+      stubs.setMatrixAt(i, dummy.matrix)
+    }
+    stubs.instanceMatrix.needsUpdate = true
+    group.add(stubs)
+
+    // the lip's live edge + a row of warning LEDs
+    const edgeGlow = new Mesh(new BoxGeometry(120, 0.07, 0.18), STUB_MAT)
+    road.place(bf.endM, 0, pos)
+    edgeGlow.position.set(pos.x, BOARD_Y + 0.05, pos.z)
+    edgeGlow.rotation.y = yawE
+    group.add(edgeGlow)
+    const WARN_MAT = new MeshStandardMaterial({
+      color: '#ff3b30',
+      emissive: '#ff3b30',
+      emissiveIntensity: 2.6,
+      toneMapped: false,
+    })
+    const warns = new InstancedMesh(new BoxGeometry(0.4, 0.16, 0.4), WARN_MAT, 6)
+    ;[-38, -24, -10, 10, 24, 38].forEach((lat, i) => {
+      road.place(bf.endM - 0.8, lat, pos)
+      dummy.position.set(pos.x, BOARD_Y + 0.12, pos.z)
+      dummy.rotation.set(0, yawE, 0)
+      dummy.scale.setScalar(1)
+      dummy.updateMatrix()
+      warns.setMatrixAt(i, dummy.matrix)
+    })
+    warns.instanceMatrix.needsUpdate = true
+    group.add(warns)
+
+    // silkscreen warning printed across the road before the drop
+    const warnPlate = new Mesh(
+      new PlaneGeometry(11, 3),
+      new MeshStandardMaterial({
+        map: makeTextPanel({
+          title: '⚠ END OF ROAD',
+          sub: 'THE STORY CONTINUES OFF THE MAP',
+          bg: '#04150d',
+          fg: '#ffd23e',
+          border: '#ffd23e88',
+          w: 768,
+          h: 224,
+        }),
+        emissive: '#ffffff',
+        emissiveMap: makeTextPanel({
+          title: '⚠ END OF ROAD',
+          sub: 'THE STORY CONTINUES OFF THE MAP',
+          bg: '#000000',
+          fg: '#7a6420',
+          w: 768,
+          h: 224,
+        }),
+        emissiveIntensity: 0.8,
+        roughness: 0.9,
+      }),
+    )
+    const sW = road.at(bf.endM - 9)
+    road.place(bf.endM - 9, 0, pos)
+    warnPlate.position.set(pos.x, BOARD_Y + 0.16, pos.z)
+    warnPlate.rotation.set(-Math.PI / 2, 0, Math.atan2(sW.tx, sW.tz))
+    group.add(warnPlate)
+  }
 
   /* traces: Manhattan-routed ribbons, merged into ONE geometry */
   const positions: number[] = []

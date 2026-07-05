@@ -135,25 +135,21 @@ export function ProjectBillboards() {
     const window_ = DETOUR_WINDOWS.find((w) => w.def.id === 'ai-flagships')
     if (!window_) return []
     const road = getZoneRoad(5)
-    const pauseM = (window_.spline - CHAPTER_MARKS[5]) * totalLength
+    const startM = (window_.spline - CHAPTER_MARKS[5]) * totalLength
+    const spanM = window_.span * totalLength
     const panels = window_.def.panels.filter((p) => p.kind === 'card')
     const pos = new Vector3()
-    // staggered around the stopped rider: two left, two right
-    const layout = [
-      { dm: 15, side: -1 },
-      { dm: 27, side: 1 },
-      { dm: 40, side: -1 },
-      { dm: 53, side: 1 },
-    ]
+    // spread along the whole slow-motion run, alternating sides — the ride
+    // rolls past one board at a time instead of parking in a cluster
     return panels.map((panel, i) => {
-      const { dm, side } = layout[i % layout.length]
-      const m = pauseM + dm
+      const side = i % 2 === 0 ? -1 : 1
+      const m = startM + 10 + (i * (spanM - 16)) / Math.max(1, panels.length - 1)
       const s = road.at(m)
-      road.place(m, 12.5 * side, pos)
+      road.place(m, 12 * side, pos)
       return {
         panel,
         pos: new Vector3(pos.x, pos.y + 5.6, pos.z),
-        yaw: Math.atan2(s.tx, s.tz) + Math.PI + side * 0.24,
+        yaw: Math.atan2(s.tx, s.tz) + Math.PI + side * 0.22,
       }
     })
   }, [])

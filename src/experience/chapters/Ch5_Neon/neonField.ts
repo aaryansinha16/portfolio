@@ -1,11 +1,8 @@
 import {
-  AdditiveBlending,
   BoxGeometry,
-  CanvasTexture,
   Group,
   InstancedMesh,
   Mesh,
-  MeshBasicMaterial,
   MeshStandardMaterial,
   Object3D,
   PlaneGeometry,
@@ -18,10 +15,10 @@ import { createRng, rngRange } from '../../../utils/random'
 import { AI_PROJECTS } from '../../../content'
 
 /**
- * Ch5 Neon statics: dark towers with sparse cool windows, neon strips
- * (a subset wired to flicker materials), the four AI-project signs in
- * actual neon, and their wet-road streaks — the cheap trick that sells
- * rain-slick asphalt: additive gradient smears under every light.
+ * Ch5 Neon statics: dark towers with sparse cool windows, neon strips on
+ * tower faces (a subset wired to flicker materials), and the four
+ * AI-project signs in actual neon. The moving light belongs to
+ * NeonRoadFlow — pulses running the road's edges.
  */
 
 const ZONE = 5
@@ -42,20 +39,6 @@ const stripMat = (color: string) =>
 export const FLICKER_MATS = [stripMat('#00e5ff'), stripMat('#ff2e88')]
 const STATIC_MATS = [stripMat('#00e5ff'), stripMat('#ff2e88'), stripMat('#b98aff')]
 
-function makeStreakTexture(): CanvasTexture {
-  const canvas = document.createElement('canvas')
-  canvas.width = 64
-  canvas.height = 128
-  const ctx = canvas.getContext('2d')!
-  const grad = ctx.createLinearGradient(0, 0, 0, 128)
-  grad.addColorStop(0, 'rgba(255,255,255,0.85)')
-  grad.addColorStop(0.4, 'rgba(255,255,255,0.3)')
-  grad.addColorStop(1, 'rgba(255,255,255,0)')
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, 64, 128)
-  return new CanvasTexture(canvas)
-}
-
 let cachedGroup: Group | null = null
 let cachedSteam: Vector3[] | null = null
 
@@ -70,8 +53,6 @@ export function getNeonStatics(): Group {
   const rng = createRng(SEED)
   const group = new Group()
   const pos = new Vector3()
-  const streakTex = makeStreakTexture()
-  const streakGeo = new PlaneGeometry(1, 1)
 
   /* dark towers, sparse cool windows */
   const towers = genTowers({
@@ -160,7 +141,7 @@ export function getNeonStatics(): Group {
     group.add(mesh)
   }
 
-  /* the four AI-project neon signs + wet-road streaks */
+  /* the four AI-project neon signs */
   const steamAnchors: Vector3[] = []
   AI_PROJECTS.forEach((project, i) => {
     const m = road.zoneMeters * (0.16 + i * 0.22)
@@ -199,24 +180,6 @@ export function getNeonStatics(): Group {
     back.scale.set(7.7, 2.5, 0.18)
     back.translateZ(-0.12)
     group.add(back, sign)
-
-    // wet-road streak: additive smear from below the sign toward road center
-    road.place(m, 3.2 * side, pos)
-    const streak = new Mesh(
-      streakGeo,
-      new MeshBasicMaterial({
-        map: streakTex,
-        color: project.color,
-        transparent: true,
-        opacity: 0.42,
-        blending: AdditiveBlending,
-        depthWrite: false,
-      }),
-    )
-    streak.position.set(pos.x, pos.y + 0.12, pos.z)
-    streak.rotation.set(-Math.PI / 2, 0, yaw + Math.PI)
-    streak.scale.set(2.4, 9, 1)
-    group.add(streak)
 
     if (i % 2 === 0) {
       road.place(m + 8, 7.5 * side, pos)

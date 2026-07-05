@@ -28,8 +28,13 @@ export interface ZoneRoad {
   samples: ZoneSample[]
   zoneMeters: number
   step: number
-  /** nearest sample by meters along the zone */
+  /** nearest sample by meters along the zone — fine for STATIC placement */
   at: (m: number) => ZoneSample
+  /**
+   * Interpolated sample for MOVERS. `at()` snaps to the 4m grid — anything
+   * animated with it visibly teleports (the traffic "skipping frames" bug).
+   */
+  sample: (m: number, out: ZoneSample) => ZoneSample
   /** world position offset laterally from the road at m meters */
   place: (m: number, lateral: number, out: Vector3) => Vector3
 }
@@ -63,6 +68,25 @@ export function getZoneRoad(zone: number, step = 4, margin = 30): ZoneRoad {
     at(m: number): ZoneSample {
       const idx = Math.round((m - samples[0].meters) / step)
       return samples[Math.max(0, Math.min(samples.length - 1, idx))]
+    },
+    sample(m: number, out: ZoneSample): ZoneSample {
+      const f = (m - samples[0].meters) / step
+      const i0 = Math.max(0, Math.min(samples.length - 2, Math.floor(f)))
+      const t = Math.max(0, Math.min(1, f - i0))
+      const a = samples[i0]
+      const b = samples[i0 + 1]
+      out.x = a.x + (b.x - a.x) * t
+      out.y = a.y + (b.y - a.y) * t
+      out.z = a.z + (b.z - a.z) * t
+      const tx = a.tx + (b.tx - a.tx) * t
+      const tz = a.tz + (b.tz - a.tz) * t
+      const tl = Math.hypot(tx, tz) || 1
+      out.tx = tx / tl
+      out.tz = tz / tl
+      out.rx = -out.tz
+      out.rz = out.tx
+      out.meters = m
+      return out
     },
     place(m: number, lateral: number, out: Vector3): Vector3 {
       const s = road.at(m)

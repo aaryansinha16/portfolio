@@ -1,7 +1,15 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { PerspectiveCamera } from 'three'
-import { metersToProgress, pointAt, tangentAt, totalLength } from './spline/roadPath'
+import {
+  CLIFF_MAX_OVER,
+  CLIFF_START_M,
+  metersToProgress,
+  pointAt,
+  pointPastEnd,
+  tangentAt,
+  totalLength,
+} from './spline/roadPath'
 import { useJourney } from '../state/useJourney'
 import { sampleCamera, vehicleProgressAt, type RuntimeCam } from './atmosphere/ColorScript'
 import { clamp, clamp01, damp } from '../utils/math'
@@ -57,11 +65,19 @@ export function CameraRig() {
     const { v1: camPos, v2: look, v3: right, v4: tangent, v5: tangentAhead } = scratch
     sampleCamera(p, camFrame)
 
+    // The dive: how far the ride is past the cliff edge (0 before it).
+    // The camera holds its spot on the deck but RISES with the fall —
+    // from chase height the lip itself would hide anything below the edge.
+    const overVehicle = clamp01(
+      (vehicleProgressAt(state.splineProgress) * totalLength - CLIFF_START_M) / CLIFF_MAX_OVER,
+    )
+    const dive = overVehicle * overVehicle * (3 - 2 * overVehicle) // smoothstep
+
     // Position: on the spline at p, lifted and offset slightly right.
     pointAt(p, camPos)
     tangentAt(p, tangent)
     right.set(-tangent.z, 0, tangent.x).normalize()
-    camPos.y += camFrame.height
+    camPos.y += camFrame.height + dive * 6.5
     camPos.addScaledVector(right, camFrame.right)
 
     // Subtle speed shake (never at rest, never in reduced motion).
@@ -74,9 +90,16 @@ export function CameraRig() {
 
     camera.position.copy(camPos)
 
-    // Look-at leads the vehicle so turns feel anticipated.
+    // Look-at leads the vehicle so turns feel anticipated. Near the cliff
+    // the target follows the SAME dive extrapolation the vehicle rides, so
+    // the camera tilts down and watches the fall (capped just past the
+    // vehicle's own hang point to keep it framed).
     const pVehicle = vehicleProgressAt(p)
-    pointAt(pVehicle + metersToProgress(CAM.lookAheadMeters), look)
+    const lookM = Math.min(
+      pVehicle * totalLength + CAM.lookAheadMeters,
+      CLIFF_START_M + CLIFF_MAX_OVER + 2,
+    )
+    pointPastEnd(lookM, look)
     look.y += CAM.lookHeight
     camera.up.set(0, 1, 0)
     camera.lookAt(look)

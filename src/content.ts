@@ -155,6 +155,16 @@ export const CITY_BILLBOARDS: readonly {
   },
 ]
 
+/** City gantries — signs spanning the road itself; you drive under the arc. */
+export const CITY_GANTRIES: readonly { title: string; sub: string; color: string }[] = [
+  {
+    title: 'THE CLIMB · 2018 → 2026',
+    sub: 'freelance kid to engineering lead',
+    color: '#ffd9a0',
+  },
+  { title: '7 ROLES · 1 ROAD', sub: 'every billboard on this skyline is real', color: '#7de8ff' },
+]
+
 /** Town shopfront signboards — the learning-years street. */
 export const TOWN_SHOPS: readonly { name: string; bg: string }[] = [
   { name: 'CYBER CAFÉ', bg: '#274e63' },
@@ -201,10 +211,16 @@ export interface DetourDef {
   mode?: 'strip' | 'world'
   /** which chapter zone the stop belongs to */
   zone: number
-  /** where along the zone the rider pulls over (0..1 of the zone) */
+  /** where along the zone the stop begins (0..1 of the zone) */
   anchorT: number
-  /** how much scroll the pause consumes (fraction of total scroll) */
+  /** how much scroll the stop consumes (fraction of total scroll) */
   scrollLen: number
+  /**
+   * road covered DURING the stop. 0 (strips) = full plateau, the rider pulls
+   * over; >0 (world stops) = the ride keeps rolling in slow motion past the
+   * in-world exhibits for this many meters.
+   */
+  spanMeters?: number
   panels: DetourPanel[]
 }
 
@@ -256,8 +272,9 @@ export const DETOURS: readonly DetourDef[] = [
     style: 'holo',
     mode: 'world',
     zone: 5,
-    anchorT: 0.55,
+    anchorT: 0.52,
     scrollLen: 0.075,
+    spanMeters: 96,
     panels: [
       {
         kind: 'intro',

@@ -4,6 +4,7 @@ import { InstancedMesh, MeshBasicMaterial, Object3D, SphereGeometry, Vector3 } f
 import { FarSilhouettes } from '../GreyboxBiome'
 import { neonConfig } from './config'
 import { FLICKER_MATS, getNeonStatics, getNeonSteamAnchors } from './neonField'
+import { NeonRoadFlow } from './NeonRoadFlow'
 import { PuffColumn } from '../../world/PuffColumn'
 import { getZoneRoad } from '../../world/roadSamples'
 import { ProjectBillboards } from '../../detours/ProjectBillboards'
@@ -74,8 +75,8 @@ function Drones() {
 
 /**
  * Chapter 5 — Neon Night. Dark towers with sparse cool windows, neon strips
- * (some flickering), the four AI-project signs in glowing tube text, wet-road
- * streaks, street steam, drones crossing the sky.
+ * (some flickering), the four AI-project signs in glowing tube text, pulses
+ * of light flowing along the road edges, street steam, drones in the sky.
  */
 export default function Ch5_Neon() {
   const statics = useMemo(getNeonStatics, [])
@@ -83,6 +84,7 @@ export default function Ch5_Neon() {
   return (
     <group>
       <primitive object={statics} dispose={null} />
+      <NeonRoadFlow />
       <NeonFlicker />
       <Drones />
       <ProjectBillboards />

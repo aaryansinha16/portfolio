@@ -117,3 +117,25 @@ all idle). Verify stops are spline-space, converted at runtime via window.__toSc
 *Rejected:* pinned ScrollTrigger sections (a second scroll consumer — violates prime
 directive #1), slow-rolling background under the strip (weaker beat, and the DESIGN brief
 explicitly says pause).
+
+**ADR-16 · 2026-07-05 · World detours roll in slow motion (spanMeters), strips still plateau**
+Owner: the ch5 showroom shouldn't park the rider — "make the vehicle move but in slow
+motion". DetourDef gained spanMeters: inside a window the spline now advances linearly by
+that many meters over the window's scrollLen (0 = the old plateau). The scroll→spline remap
+stays piecewise and reversible; K becomes (1-Σspan)/(1-Σpause) so both axes still land on 1
+together. The four clickable boards spread along the 96m run (~27m apart), and vehicle
+speed falls out of spline deltas automatically (~30% cruise through the showroom).
+*Rejected:* time-based slow-mo (breaks scrub purity), camera-only slowdown (vehicle
+visibly parks, which is the exact complaint).
+
+**ADR-17 · 2026-07-05 · The finale is a cliff; the fall is spline extrapolation, not physics**
+The road, dashes and PCB all stop at CLIFF_START_M (spline end − 10m): torn-lip slabs,
+glowing trace stubs, warning LEDs, a silkscreen "END OF ROAD". pointPastEnd(m) continues
+past the edge along the end tangent with a parabolic drop (y −= 0.048·over²); the vehicle
+caps at +14m and takes a slow roll, the camera keeps its deck position but rises 6.5m with
+the dive (from chase height the lip occludes everything below the edge — found via
+screenshot review), and its look target rides the same extrapolation. Everything is a pure
+function of scroll, so scrolling up rewinds the fall mid-air. Autopilot (per-tick lenis
+steps, input-cancellable, re-armed on chapter exit) drives you off the edge hands-free.
+*Rejected:* time-driven fall animation (not reversible), physics impulse (same), ending the
+scroll runway at the edge (loses the beat the owner asked for).

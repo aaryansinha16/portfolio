@@ -64,7 +64,52 @@ export function initScrollSpine(): () => void {
   })
   lenis.on('scroll', ScrollTrigger.update)
 
-  const tick = (time: number) => lenis?.raf(time * 1000)
+  /* Ch6 autopilot (owner request): entering the circuit hands the wheel
+   * over — the ride drives itself to the road's end (and off it). Driven
+   * per-tick with immediate scrollTo steps: a single long lenis tween dies
+   * to any trackpad inertia, which is why v1 "never happened". Any real
+   * input hands control back; leaving ch6 re-arms it for the next visit. */
+  let apState: 'armed' | 'running' | 'done' = 'armed'
+  let apSpeed = 0 // scroll px/s
+  let apRamp = 0 // seconds since engage (eases in)
+  const cancelAutopilot = () => {
+    if (apState === 'running') apState = 'done'
+  }
+  const AP_CANCEL_EVENTS: readonly (keyof WindowEventMap)[] = [
+    'wheel',
+    'touchstart',
+    'pointerdown',
+    'keydown',
+  ]
+  AP_CANCEL_EVENTS.forEach((e) => window.addEventListener(e, cancelAutopilot, { passive: true }))
+  const unsubAutopilot = useJourney.subscribe(
+    (s) => s.chapter,
+    (chapter) => {
+      if (chapter < 6) {
+        apState = 'armed'
+      } else if (chapter === 6 && apState === 'armed' && !PREFERS_REDUCED_MOTION && lenis) {
+        apState = 'running'
+        apRamp = -0.7 // a short beat before the wheel turns itself
+        apSpeed = Math.max(60, (lenis.limit - lenis.scroll) / 15)
+      }
+    },
+  )
+
+  const tick = (time: number, deltaMs: number) => {
+    lenis?.raf(time * 1000)
+    if (apState === 'running' && lenis) {
+      if (lenis.scroll >= lenis.limit - 1) {
+        apState = 'done'
+      } else {
+        apRamp += deltaMs / 1000
+        if (apRamp > 0) {
+          const ease = Math.min(1, apRamp / 2.2) // gentle pull-away
+          const next = Math.min(lenis.scroll + apSpeed * ease * (deltaMs / 1000), lenis.limit)
+          lenis.scrollTo(next, { immediate: true })
+        }
+      }
+    }
+  }
   gsap.ticker.add(tick)
   gsap.ticker.lagSmoothing(0)
 
@@ -90,22 +135,6 @@ export function initScrollSpine(): () => void {
     },
   })
 
-  // Ch6 autopilot (owner request): entering the circuit hands the wheel
-  // over — the vehicle drives itself to the road's end. Any user scroll
-  // input takes back control (lenis folds user deltas into the animation).
-  let autopilotDone = false
-  const unsubAutopilot = useJourney.subscribe(
-    (s) => s.chapter,
-    (chapter) => {
-      if (chapter !== 6 || autopilotDone) return
-      autopilotDone = true
-      window.setTimeout(() => {
-        if (!lenis || useJourney.getState().chapter !== 6) return
-        lenis.scrollTo(lenis.limit, { duration: 9, easing: (t: number) => 1 - Math.pow(1 - t, 2) })
-      }, 900)
-    },
-  )
-
   // ?chapter=N — jump once layout/measurements exist.
   const startChapter = START_CHAPTER
   if (startChapter != null) {
@@ -117,6 +146,7 @@ export function initScrollSpine(): () => void {
 
   return () => {
     unsubAutopilot()
+    AP_CANCEL_EVENTS.forEach((e) => window.removeEventListener(e, cancelAutopilot))
     master?.scrollTrigger?.kill()
     master?.kill()
     master = null
