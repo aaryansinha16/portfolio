@@ -60,6 +60,14 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-05 (j)** — ROUND 5: glance dialed up (mix .85, half-rate windows), autopilot
+  limit/4, ch4 mounts constrained (unused tower + ≥45m along-road separation + sight-line
+  + board width fitted to its wall — 15m panels on 10m faces wrapped corners into
+  neighbors). LESSON: any verify probe that references a SCROLL fraction breaks whenever
+  the scroll→spline remap gains windows — always express probe positions in spline space
+  and convert via window.__toScroll at runtime (the autopilot probe "failed" purely
+  because ch6's scroll start moved from .843 to .861).
+
 - **2026-07-05 (i)** — ROUND 4: the glance choreography. Architecture that keeps prime
   directive #1: story-board STATIONS live in a pure module (focusZones — data only, owns
   TUNNEL_LEN now); DetourManager folds them into the ONE piecewise scroll→spline remap as

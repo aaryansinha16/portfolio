@@ -151,6 +151,22 @@ great, zero console errors.
 
 ---
 
+## Polish round 5 — glance strength + ch4 mount constraints (2026-07-05) — ALL DONE
+
+- [x] 1: glance tilt strengthened — FOCUS_MIX 0.55 → 0.85, proximity floor 0.5 (the
+      camera now commits to the board)
+- [x] 2: glance slow-down deepened — windows run at HALF the nominal rate (stretch 2.0)
+- [x] 3: ch6 autopilot +50% again — rest of the chapter in ~4s (probe: 1452px/3.5s)
+- [x] 4: Masai/Brainerhub panels intersected — stations kept them apart on paper but
+      tower-snapping (±25m) collapsed the mounts into neighbors, and 15m panels overflow
+      narrow faces past corners. Mount picking now enforces: unused tower + ≥45m
+      along-road separation from every other sign + clear sight-line; board width fits
+      its wall (min(15, faceW + 1.5))
+- [x] 5: Paisaeasy gap — same separation constraint covers it (verified: gantry →
+      Paisaeasy → Eigenlytics each alone on approach)
+- [x] verify: autopilot probe entry is spline-space now — hardcoded scroll fractions
+      broke the moment new remap windows moved ch6's scroll start
+
 ## Polish round 4 — pace + the glance choreography (2026-07-05) — ALL DONE
 
 - [x] 1: ch6 autopilot pace — ~2.5× faster (rest of the chapter in ~6s, quick 1.3s

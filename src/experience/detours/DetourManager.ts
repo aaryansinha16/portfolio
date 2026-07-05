@@ -43,11 +43,11 @@ interface RemapWindow {
   def?: DetourDef
 }
 
-/* glance windows: 24m of road at ~74% of nominal rate, covering the
- * approach to each station and a beat past it */
+/* glance windows: 24m of road at HALF the nominal rate (owner: the glance
+ * must read as a real slow-down), covering the approach and a beat past */
 const GLANCE_BACK = 20
 const GLANCE_LEN = 24
-const GLANCE_STRETCH = 1.35
+const GLANCE_STRETCH = 2.0
 
 const ALL_WINDOWS: readonly RemapWindow[] = (() => {
   const entries: RemapWindow[] = []

@@ -108,13 +108,17 @@ for (const [name, frac] of allStops) {
 
 // ---- autopilot probe: enter ch6 fresh, then simulate a trackpad MOMENTUM
 // TAIL (the thing that silently killed v1) and confirm the ride still
-// starts driving itself once the input goes quiet
-await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * 0.79))
+// starts driving itself once the input goes quiet. Entry points are
+// SPLINE-space (hardcoded scroll fractions broke when new remap windows
+// moved ch6's scroll start).
+const apPre = await toScroll(0.8)
+const apIn = await toScroll(0.835)
+await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * apPre))
 await page.waitForTimeout(1800)
 await page.evaluate(() => {
   window.__allowAp = true
 })
-await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * 0.845))
+await page.evaluate((y) => window.scrollTo(0, y), Math.round(maxScroll * apIn))
 await page.evaluate(
   () =>
     new Promise((resolve) => {

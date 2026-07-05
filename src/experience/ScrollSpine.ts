@@ -113,13 +113,13 @@ export function initScrollSpine(): () => void {
         } else {
           apState = 'driving'
           apRamp = 0
-          // brisk (owner: "quite fast") — the rest of ch6 in ~6s
-          apSpeed = Math.max(140, (lenis.limit - lenis.scroll) / 6)
+          // flat out (owner, twice) — the rest of ch6 in ~4s
+          apSpeed = Math.max(200, (lenis.limit - lenis.scroll) / 4)
         }
       }
     } else if (apState === 'driving') {
       apRamp += dt
-      const ease = Math.min(1, apRamp / 1.3) // quick pull-away
+      const ease = Math.min(1, apRamp / 1.0) // quick pull-away
       const next = Math.min(lenis.scroll + apSpeed * ease * dt, lenis.limit)
       lenis.scrollTo(next, { immediate: true })
       if (next >= lenis.limit - 1) apState = 'done'
