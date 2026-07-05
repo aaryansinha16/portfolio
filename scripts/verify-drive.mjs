@@ -62,6 +62,16 @@ await page.goto(TARGET, { waitUntil: 'networkidle' })
 await page.waitForSelector('canvas', { timeout: 15000 })
 await page.waitForTimeout(2500)
 
+// the sound gate is modal (scroll locked until a choice) — pick "muted"
+const dismissGate = async (pg) => {
+  try {
+    await pg.click('.sound-gate__mute', { timeout: 5000 })
+  } catch {
+    /* gate not present */
+  }
+}
+await dismissGate(page)
+
 const maxScroll = await page.evaluate(
   () => document.documentElement.scrollHeight - window.innerHeight,
 )
@@ -163,6 +173,7 @@ await cdp.send('Emulation.setCPUThrottlingRate', { rate: 2 })
 await perfPage.goto(TARGET, { waitUntil: 'domcontentloaded' })
 await perfPage.waitForSelector('canvas', { timeout: 15000 })
 await perfPage.waitForTimeout(3000) // let the quality ratchet settle
+await dismissGate(perfPage)
 
 let minFps = Infinity
 const perfToScroll = async (spline) => perfPage.evaluate((p) => window.__toScroll(p), spline)
@@ -203,6 +214,7 @@ const memPage = await browser.newPage({ viewport: { width: 1280, height: 720 } }
 await memPage.goto(`${TARGET}?debug`, { waitUntil: 'domcontentloaded' })
 await memPage.waitForSelector('canvas', { timeout: 15000 })
 await memPage.waitForTimeout(2500)
+await dismissGate(memPage)
 await suppressAutopilot(memPage)
 const memScroll = await memPage.evaluate(
   () => document.documentElement.scrollHeight - window.innerHeight,

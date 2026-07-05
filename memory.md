@@ -60,6 +60,16 @@ Claude Code: read this at session start; append at session end. Newest first. Ke
 
 ## Session log
 
+- **2026-07-06 (a)** — ROUND 11. Ch4 boards: after 4 rounds of tower-mount fixes, the
+  structural answer was NO tower mounts — freestanding at stations + clearing tower
+  corridors AT GENERATION time (filter in genTowers result). When a placement system
+  fights the content 3+ times, remove the degree of freedom. Sound gate: lenis.stop()
+  blocks wheel/touch but NOT native key/scrollbar scrolling — block scroll keys while
+  modal is up; verify must click through ('.sound-gate__mute') on every page it opens.
+  Flying ending: pointPastEnd became dive→pull-out→climb (C1 at the seam), Safari
+  scale-swaps to a FinalePlane at over=7 — swap-by-scale masked by motion, fully
+  scrub-reversible. Owner arc complete: crash read negative → now it ends airborne.
+
 - **2026-07-05 (o)** — ROUND 10: ch3 noon → midnight (config re-grade + NightSky:
   shader-twinkle star dome, nebula sprites, shooting stars on deterministic clocks,
   everything faded by zoneFloat proximity). Lit-hoarding kit: floodlight bar + emissive

@@ -11,7 +11,7 @@ import {
 } from 'three'
 import { Mesh, PlaneGeometry } from 'three'
 import { getZoneRoad } from '../../world/roadSamples'
-import { buildTowerMesh, buildWindowMesh, genTowers, type TowerSpec } from '../../world/towers'
+import { buildTowerMesh, buildWindowMesh, genTowers } from '../../world/towers'
 import { makeTextPanel } from '../../world/textPanel'
 import { cityStations, TUNNEL_LEN } from '../../world/focusZones'
 import { registerFocusTarget } from '../../world/focusTargets'
@@ -157,7 +157,12 @@ export function getCityStatics(): Group {
   const group = new Group()
   const pos = new Vector3()
 
-  /* towers with lit windows — dusk offices coming alive */
+  /* towers with lit windows — dusk offices coming alive. The career-board
+     corridors are CLEARED at generation time: every board is freestanding
+     at its station now, and towers repeatedly swallowed them half-deep
+     (owner: Masai, Brainerhub — three rounds of it). */
+  const stations = cityStations(road.zoneMeters)
+  const boardSides = stations.boards.map((_, i) => (i % 2 === 0 ? -1 : 1))
   const towers = genTowers({
     zone: ZONE,
     seed: SEED,
@@ -170,6 +175,28 @@ export function getCityStatics(): Group {
     hMax: 52,
     density: 0.85,
     endClear: TUNNEL_LEN + 12,
+  }).filter((t) => {
+    // project the tower onto the road once
+    let bestD2 = Infinity
+    let smp0 = road.samples[0]
+    for (const smp of road.samples) {
+      const d2 = (t.x - smp.x) ** 2 + (t.z - smp.z) ** 2
+      if (d2 < bestD2) {
+        bestD2 = d2
+        smp0 = smp
+      }
+    }
+    const m = smp0.meters
+    const lat = (t.x - smp0.x) * smp0.rx + (t.z - smp0.z) * smp0.rz
+    const halfExt = Math.max(t.w, t.d) / 2
+    for (let i = 0; i < stations.boards.length; i++) {
+      const sameSide = lat * boardSides[i] > 0
+      if (!sameSide) continue
+      if (Math.abs(m - stations.boards[i]) < 16 + halfExt && Math.abs(lat) - halfExt < 22) {
+        return false
+      }
+    }
+    return true
   })
   group.add(buildTowerMesh(towers, ['#3a3f5c', '#464b6b', '#6b4e71', '#333850']))
   group.add(
@@ -278,111 +305,15 @@ export function getCityStatics(): Group {
   lights.instanceMatrix.needsUpdate = true
   group.add(lights)
 
-  /* the career arc — big billboards hung LOW on road-facing tower faces
-     (owner: eye level, not rooftops), plus two gantries spanning the road.
-     Every mount picks the face by dot(normal, toRoad) and uses THAT face's
-     half-extent — max(w,d)/2 left boards floating off the narrow faces. */
+  /* the career arc — SEVEN freestanding roadside billboards, one per
+     station (owner: tower mounts kept getting swallowed by neighbors, so
+     the street itself carries the story). The gantries span overhead. */
   {
-    const usable = towers.filter((t) => t.h > 17)
-    // boards and gantries share one evenly spaced station rhythm — nothing
-    // ever sits in another sign's sight-line (owner: Masai hid THE CLIMB,
-    // Paisaeasy hid 7 ROLES, Freelance hid behind a nearer tower)
-    const stations = cityStations(road.zoneMeters)
     const gantryMs = stations.gantries
-
-    // a board is USELESS if other towers block its approach sight-lines.
-    // A straight ray along the station tangent missed curve geometry (the
-    // camera cuts corners) — so walk the segments from the mount to the
-    // driver's ACTUAL road positions 14–56m before the station, at board
-    // height, and reject mounts any tower footprint interrupts.
-    const sightPoint = new Vector3()
-    const sightClear = (t: TowerSpec, stationM: number, py: number) => {
-      const sSt = road.at(stationM)
-      // rays start from the board's CENTER AND EDGES — center-only rays
-      // passed mounts whose panel was half-covered by a neighbor
-      for (const edge of [-6, 0, 6]) {
-        const bx = t.x + sSt.tx * edge
-        const bz = t.z + sSt.tz * edge
-        for (const back of [14, 26, 40, 56]) {
-          road.place(stationM - back, 0, sightPoint)
-          const dx = sightPoint.x - bx
-          const dz = sightPoint.z - bz
-          const len = Math.hypot(dx, dz) || 1
-          const ux = dx / len
-          const uz = dz / len
-          for (let s = 9; s < len - 5; s += 6) {
-            const sx = bx + ux * s
-            const sz = bz + uz * s
-            for (const o of usable) {
-              if (o === t || o.y + o.h + 1 < py) continue
-              const ox2 = sx - o.x
-              const oz2 = sz - o.z
-              const c = Math.cos(o.yaw)
-              const sn = Math.sin(o.yaw)
-              const lx = ox2 * c - oz2 * sn
-              const lz = ox2 * sn + oz2 * c
-              if (Math.abs(lx) < o.w / 2 + 0.5 && Math.abs(lz) < o.d / 2 + 0.5) return false
-            }
-          }
-        }
-      }
-      return true
-    }
-
-    // each usable tower's road-frame position (meters along + signed
-    // lateral) — separation, first-row preference and glance timing all
-    // need it
-    const projOf = new Map<TowerSpec, { m: number; lat: number }>()
-    for (const t of usable) {
-      let bestD2 = Infinity
-      let smp0 = road.samples[0]
-      for (const smp of road.samples) {
-        const d2 = (t.x - smp.x) ** 2 + (t.z - smp.z) ** 2
-        if (d2 < bestD2) {
-          bestD2 = d2
-          smp0 = smp
-        }
-      }
-      projOf.set(t, {
-        m: smp0.meters,
-        lat: (t.x - smp0.x) * smp0.rx + (t.z - smp0.z) * smp0.rz,
-      })
-    }
-    // mounts already spoken for — stations kept boards apart on paper, but
-    // tower-snapping (±25m) collapsed neighbors into each other (owner's
-    // screenshot: Masai's panel slicing through Brainerhub's)
-    const usedTowers = new Set<TowerSpec>()
-    const usedAlong: number[] = [...gantryMs]
-    const clearOf = (m: number, gap: number) => usedAlong.every((u) => Math.abs(u - m) >= gap)
 
     CITY_BILLBOARDS.forEach((bb, i) => {
       const targetM = stations.boards[i]
       const sT = road.at(targetM)
-      road.place(targetM, 0, pos)
-      const rx = pos.x
-      const rz = pos.z
-      // FIRST-ROW towers first, and ONLY within 10m of the station: the
-      // glance slow-mo window sits AT the station, and mounts snapped
-      // ±25m away put the head-turn outside the slow-down (the ch4 "not
-      // slow when tilted" bug). Anything without a near, clean tower goes
-      // freestanding at the station — perfectly aligned by construction.
-      const cands = usable
-        .map((t) => ({ t, p: projOf.get(t)! }))
-        .filter(
-          (c) => Math.abs(c.p.m - targetM) < 10 && Math.abs(c.p.lat) < 36 && !usedTowers.has(c.t),
-        )
-        .sort((a, b) => Math.abs(a.p.lat) - Math.abs(b.p.lat))
-      const boardYTest = 11
-      // STRICT picks only — every accepted tower mount must satisfy both
-      // separation and clear sight-lines. The old `?? cands[0]` fallback
-      // silently dropped both rules, which is how Masai ended up occluded
-      // ten meters from Brainerhub. Boards flagged freestanding skip tower
-      // hunting entirely.
-      const mount = bb.freestanding
-        ? undefined
-        : (cands.find((c) => clearOf(c.p.m, 45) && sightClear(c.t, targetM, c.t.y + boardYTest)) ??
-          cands.find((c) => clearOf(c.p.m, 40) && sightClear(c.t, targetM, c.t.y + boardYTest)))
-
       const tex = drawCareerBoard(bb, i, CITY_BILLBOARDS.length)
       const mat = new MeshStandardMaterial({
         color: '#000000',
@@ -395,85 +326,27 @@ export function getCityStatics(): Group {
       })
       if (i % 2 === 1) BILLBOARD_FLICKER_MATS.push(mat)
 
-      if (mount) {
-        const best = mount.t
-        usedTowers.add(best)
-        usedAlong.push(mount.p.m)
-        const toRoadLen = Math.hypot(rx - best.x, rz - best.z) || 1
-        const toRoadX = (rx - best.x) / toRoadLen
-        const toRoadZ = (rz - best.z) / toRoadLen
-        // candidate faces carry their normal, half-extent AND width. The
-        // ROAD-side wall wins (owner ask) with a modest approach-facing
-        // tilt so boards never end up on side walls you only see when past.
-        const candidates: Array<[number, number, number]> = [
-          [best.yaw, best.d / 2, best.w],
-          [best.yaw + Math.PI, best.d / 2, best.w],
-          [best.yaw + Math.PI / 2, best.w / 2, best.d],
-          [best.yaw - Math.PI / 2, best.w / 2, best.d],
-        ]
-        let faceYaw = candidates[0][0]
-        let halfDepth = candidates[0][1]
-        let faceW = candidates[0][2]
-        let bestScore = -Infinity
-        for (const [cy, half, fw] of candidates) {
-          const nxC = Math.sin(cy)
-          const nzC = Math.cos(cy)
-          const score = 1.2 * (nxC * toRoadX + nzC * toRoadZ) + 0.55 * (nxC * -sT.tx + nzC * -sT.tz)
-          if (score > bestScore) {
-            bestScore = score
-            faceYaw = cy
-            halfDepth = half
-            faceW = fw
-          }
-        }
-        const nx = Math.sin(faceYaw)
-        const nz = Math.cos(faceYaw)
-        // a 15m panel on a 10m face wraps past the corner into the
-        // neighbor — fit the board to its wall (slight overhang is fine)
-        const boardW = Math.max(10, Math.min(15, faceW + 1.5))
-        const boardH = boardW * 0.49
-        const boardY = Math.min(best.h - boardH / 2 - 1.2, 9.6 + (i % 2) * 3.4)
-        const face = new Mesh(new PlaneGeometry(boardW, boardH), mat)
-        face.position.set(
-          best.x + nx * (halfDepth + 0.3),
-          best.y + boardY,
-          best.z + nz * (halfDepth + 0.3),
-        )
-        face.rotation.y = faceYaw
-        // the camera glances at THIS board — timed to where the tower stands
-        registerFocusTarget(CHAPTER_MARKS[4] * totalLength + mount.p.m, face.position)
-        const backing = new Mesh(new PlaneGeometry(boardW + 0.8, boardH + 0.8), CONCRETE_MAT)
-        backing.position.copy(face.position)
-        backing.rotation.y = faceYaw
-        backing.translateZ(-0.08)
-        group.add(backing, face)
-      } else {
-        // no tower can host this one cleanly — build a FREESTANDING
-        // roadside billboard right at the station: nothing stands between
-        // the street and 12.5m out, so it can never be occluded, and it
-        // keeps the station rhythm exactly
-        usedAlong.push(targetM)
-        const side = i % 2 === 0 ? -1 : 1
-        road.place(targetM, 12.5 * side, pos)
-        const yaw = Math.atan2(sT.tx, sT.tz) + Math.PI + side * -0.2
-        const boardW = 13
-        const boardH = 6.4
-        const face = new Mesh(new PlaneGeometry(boardW, boardH), mat)
-        face.position.set(pos.x, pos.y + 7.4, pos.z)
-        face.rotation.y = yaw
-        registerFocusTarget(CHAPTER_MARKS[4] * totalLength + targetM, face.position)
-        const backing = new Mesh(new PlaneGeometry(boardW + 0.8, boardH + 0.8), CONCRETE_MAT)
-        backing.position.copy(face.position)
-        backing.rotation.y = yaw
-        backing.translateZ(-0.08)
-        group.add(backing, face)
-        for (const off of [-boardW * 0.3, boardW * 0.3]) {
-          const leg = new Mesh(BOX, POLE_MAT)
-          leg.position.set(pos.x + Math.cos(yaw) * off, pos.y + 2.1, pos.z - Math.sin(yaw) * off)
-          leg.scale.set(0.35, 4.2, 0.35)
-          leg.castShadow = true
-          group.add(leg)
-        }
+      const side = i % 2 === 0 ? -1 : 1
+      road.place(targetM, 12.5 * side, pos)
+      const yaw = Math.atan2(sT.tx, sT.tz) + Math.PI + side * -0.2
+      const boardW = 13
+      const boardH = 6.4
+      const face = new Mesh(new PlaneGeometry(boardW, boardH), mat)
+      face.position.set(pos.x, pos.y + 7.4, pos.z)
+      face.rotation.y = yaw
+      // the camera glances at THIS board, timed exactly to its station
+      registerFocusTarget(CHAPTER_MARKS[4] * totalLength + targetM, face.position)
+      const backing = new Mesh(new PlaneGeometry(boardW + 0.8, boardH + 0.8), CONCRETE_MAT)
+      backing.position.copy(face.position)
+      backing.rotation.y = yaw
+      backing.translateZ(-0.08)
+      group.add(backing, face)
+      for (const off of [-boardW * 0.3, boardW * 0.3]) {
+        const leg = new Mesh(BOX, POLE_MAT)
+        leg.position.set(pos.x + Math.cos(yaw) * off, pos.y + 2.1, pos.z - Math.sin(yaw) * off)
+        leg.scale.set(0.35, 4.2, 0.35)
+        leg.castShadow = true
+        group.add(leg)
       }
     })
 

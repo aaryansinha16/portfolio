@@ -151,6 +151,22 @@ great, zero console errors.
 
 ---
 
+## Round 11 — clear boards, the sound gate, the flying ending (2026-07-06) — ALL DONE
+
+- [x] Masai/Brainerhub half-inside buildings, ended structurally: ALL seven career
+      boards are freestanding roadside billboards at their stations, and the tower
+      GENERATOR clears a corridor around every board station (same-side, ±16m along,
+      <22m lateral) — nothing can ever swallow a board again
+- [x] the sound dialog is a GATE now: full-screen dark blur overlay, centered dialog,
+      scroll locked (Lenis stop + key blocking) until the visitor picks START WITH
+      SOUND or continue muted — either click is the audio-activation gesture
+- [x] the ending flies: past the cliff the path dives, PULLS OUT, and climbs (C1
+      swoop); the Safari scale-swaps to the little red prop plane at 7m past the lip
+      (spinning prop, red/green nav lights, victory bank) and the journey ends
+      climbing into the stars. Pure function of scroll — rewind lands the plane back
+      into the dive and re-materializes the car
+- [x] deployed: Vercel + GitHub Pages
+
 ## Round 10 — the midnight highway + vintage type (2026-07-05) — ALL DONE
 
 - [x] ch3 re-graded noon → NIGHT: deep indigo sky, moonlight key, dark plains/road,

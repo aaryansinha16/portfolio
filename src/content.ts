@@ -135,8 +135,6 @@ export const CITY_BILLBOARDS: readonly {
   title: string
   sub: string
   color: string
-  /** mount as a roadside billboard instead of on a tower wall */
-  freestanding?: boolean
 }[] = [
   {
     era: '2018–2023',
@@ -145,15 +143,7 @@ export const CITY_BILLBOARDS: readonly {
     color: '#ff8c42',
   },
   { era: '2021', title: 'ACADBOOST', sub: 'taught personal finance & markets', color: '#ffd9a0' },
-  {
-    era: '2022',
-    title: 'MASAI SCHOOL',
-    sub: 'full-time engineering program',
-    color: '#d8e0ff',
-    // its stretch of the street is dense — tower mounts kept reading
-    // cramped at glance angles (owner, twice)
-    freestanding: true,
-  },
+  { era: '2022', title: 'MASAI SCHOOL', sub: 'full-time engineering program', color: '#d8e0ff' },
   {
     era: '2023–2026',
     title: 'BRAINERHUB',

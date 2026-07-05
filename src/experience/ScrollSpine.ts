@@ -43,6 +43,13 @@ export function scrollToProgress(p: number, immediate = false): void {
   })
 }
 
+/** The sound modal holds the journey at the gate until the visitor chooses. */
+export function setScrollLocked(locked: boolean): void {
+  if (!lenis) return
+  if (locked) lenis.stop()
+  else lenis.start()
+}
+
 export function initScrollSpine(): () => void {
   gsap.registerPlugin(ScrollTrigger)
 

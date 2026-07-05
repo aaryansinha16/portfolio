@@ -1,63 +1,62 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { roadAudio } from './AudioEngine'
+import { setScrollLocked } from '../experience/ScrollSpine'
 
 /**
- * The one-time sound callout, anchored above the HUD's sound button. It
- * earns its pixels twice: it tells the visitor the drive has audio, and the
- * click on its button IS the user-activation gesture browsers require
- * before an AudioContext may start. Any other interaction (click, key,
- * touch, or starting to scroll) dismisses it — by then the visitor has
- * either granted the gesture or chosen the quiet ride.
+ * The sound gate (owner: mandatory, not a dismissible toast). A dark
+ * overlay holds the journey at the start line until the visitor picks a
+ * lane — WITH SOUND or muted. Either click is the user-activation gesture
+ * browsers require before an AudioContext may start, so choosing sound
+ * makes it audible instantly. Scroll is locked while the gate is up.
  */
 
 export function SoundPrompt() {
   const [visible, setVisible] = useState(false)
-  const interacted = useRef(false)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      if (!interacted.current) setVisible(true)
-    }, 1600)
-    const autoHide = window.setTimeout(() => setVisible(false), 18000)
-    const dismiss = () => {
-      interacted.current = true
-      setVisible(false)
+      setVisible(true)
+      setScrollLocked(true)
+    }, 900)
+    // Lenis owns wheel/touch; keyboard scrolling is native — block it too
+    // while the gate is up (Tab/Enter/Space still work for the buttons).
+    const KEYS = ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End']
+    const blockKeys = (e: KeyboardEvent) => {
+      if (document.querySelector('.sound-gate') && KEYS.includes(e.key)) e.preventDefault()
     }
-    const events: readonly (keyof WindowEventMap)[] = [
-      'pointerdown',
-      'keydown',
-      'touchstart',
-      'wheel',
-    ]
-    events.forEach((e) => window.addEventListener(e, dismiss, { passive: true }))
+    window.addEventListener('keydown', blockKeys)
     return () => {
       window.clearTimeout(timer)
-      window.clearTimeout(autoHide)
-      events.forEach((e) => window.removeEventListener(e, dismiss))
+      window.removeEventListener('keydown', blockKeys)
     }
   }, [])
 
   if (!visible) return null
 
+  const choose = (withSound: boolean) => {
+    localStorage.setItem('rt-sound', withSound ? 'on' : 'off')
+    if (withSound) roadAudio.enable()
+    else roadAudio.disable()
+    setScrollLocked(false)
+    setVisible(false)
+  }
+
   return (
-    <div className="sound-prompt" role="dialog" aria-label="Sound recommendation">
-      <p className="sound-prompt__text">
-        For the full immersive experience,
-        <br />
-        turn the sound on.
-      </p>
-      <button
-        className="sound-prompt__cta"
-        onPointerDown={(e) => {
-          e.stopPropagation()
-          localStorage.setItem('rt-sound', 'on')
-          roadAudio.enable()
-          setVisible(false)
-        }}
-      >
-        ◉ START WITH SOUND
-      </button>
-      <span className="sound-prompt__arrow" aria-hidden />
+    <div className="sound-gate" role="dialog" aria-modal="true" aria-label="Sound choice">
+      <div className="sound-gate__dialog">
+        <p className="sound-gate__eyebrow">BEFORE YOU DRIVE</p>
+        <p className="sound-gate__text">
+          For the full immersive experience,
+          <br />
+          turn the sound on.
+        </p>
+        <button className="sound-gate__cta" autoFocus onClick={() => choose(true)}>
+          ◉ START WITH SOUND
+        </button>
+        <button className="sound-gate__mute" onClick={() => choose(false)}>
+          continue muted
+        </button>
+      </div>
     </div>
   )
 }

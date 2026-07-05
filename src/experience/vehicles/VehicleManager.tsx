@@ -5,6 +5,7 @@ import {
   CHAPTER_MARKS,
   CLIFF_MAX_OVER,
   CLIFF_START_M,
+  FLIGHT_SWAP_OVER,
   pointAt,
   pointPastEnd,
   tangentAt,
@@ -15,6 +16,7 @@ import { useJourney } from '../../state/useJourney'
 import { clamp, clamp01, damp, smoothstep } from '../../utils/math'
 import { createScratch } from '../../utils/scratch'
 import { Bicycle } from './Bicycle'
+import { FinalePlane } from './FinalePlane'
 import { Motorcycle } from './Motorcycle'
 import { R15 } from './R15'
 import { Safari } from './Safari'
@@ -195,9 +197,17 @@ function ChoreoVehicle({ def }: { def: VehicleDef }) {
     group.lookAt(ahead)
     // Parked rides sit nosed slightly into the shoulder, not lane-parallel.
     if (sNow.parkedT > 0.01) group.rotateY(0.12 * sNow.parkedT)
-    // Past the edge: a slow, weight-shifting roll into the fall.
+    // Past the edge: a slow, weight-shifting roll into the dive — and at
+    // the handover point the car gives way to the finale PLANE (scale-out
+    // masked by the motion; scrolling back re-materializes it).
     const over = sNow.along - CLIFF_START_M
-    if (over > 0) group.rotateZ(0.12 * clamp01(over / CLIFF_MAX_OVER))
+    if (over > 0) {
+      group.rotateZ(0.12 * clamp01(over / CLIFF_MAX_OVER))
+      const gone = clamp01((over - (FLIGHT_SWAP_OVER - 1.4)) / 1.4)
+      group.scale.setScalar(Math.max(1 - gone, 0.001))
+    } else if (group.scale.x !== 1) {
+      group.scale.setScalar(1)
+    }
 
     const body = bodyRef.current
     if (!body || reducedMotion) return
@@ -262,6 +272,7 @@ export function VehicleManager() {
       ))}
       <HeadlightPool />
       <DustTrail />
+      {chapter === 6 && <FinalePlane />}
     </>
   )
 }
