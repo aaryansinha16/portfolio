@@ -11,6 +11,7 @@ trap 'rm -rf "$DIR"' EXIT
 git clone --depth 1 https://github.com/aaryansinha16/aaryansinha16.github.io.git "$DIR"
 find "$DIR" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
 cp -R dist/. "$DIR"/
+find "$DIR" -name .DS_Store -delete
 touch "$DIR/.nojekyll"
 cat > "$DIR/README.md" <<'MD'
 # aaryansinha16.github.io
